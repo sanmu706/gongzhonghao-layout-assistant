@@ -2190,13 +2190,7 @@
       }
 
       function renderListStart(listStyle = state.listStyle) {
-        const base = { display: "grid", gap: "13px", margin: "16px 0" };
-
-        if (listStyle === "timeline") {
-          return `<div style="${styleAttr({ ...base, gap: "0" })}">`;
-        }
-
-        return `<div style="${styleAttr(base)}">`;
+        return `<section style="${styleAttr({ margin: "16px 0" })}">`;
       }
 
       function renderListItem(text, index, style, fontSize, listStyle = state.listStyle) {
@@ -2209,28 +2203,44 @@
           "line-height": style.bodyLine,
           "font-family": bodyFont
         };
+        const row = {
+          margin: "0 0 14px",
+          padding: "0",
+          "font-size": "0",
+          "line-height": "0"
+        };
+        const markerWrap = {
+          display: "inline-block",
+          width: "46px",
+          "vertical-align": "top"
+        };
+        const contentWrap = {
+          display: "inline-block",
+          width: "calc(100% - 46px)",
+          "vertical-align": "top"
+        };
 
         if (listStyle === "step") {
-          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "38px 1fr", gap: "10px", "align-items": "start" })}"><span style="${styleAttr({ display: "inline-flex", "align-items": "center", "justify-content": "center", width: "34px", height: "28px", "border-radius": "7px", background: style.accent, color: "#fff", "font-size": "13px", "font-weight": "800" })}">${String(index).padStart(2, "0")}</span><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+          return `<section style="${styleAttr(row)}"><span style="${styleAttr(markerWrap)}"><span style="${styleAttr({ display: "inline-block", width: "34px", height: "28px", "border-radius": "7px", background: style.accent, color: "#fff", "font-size": "13px", "font-weight": "800", "line-height": "28px", "text-align": "center" })}">${String(index).padStart(2, "0")}</span></span><span style="${styleAttr(contentWrap)}"><p style="${styleAttr(paragraph)}">${content}</p></span></section>`;
         }
 
         if (listStyle === "card") {
-          return `<div style="${styleAttr({ padding: "13px 14px", "border-radius": "8px", background: style.leadBg, border: "1px solid rgba(23,32,27,0.06)" })}"><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+          return `<section style="${styleAttr({ margin: "0 0 12px", padding: "13px 14px", "border-radius": "8px", background: style.leadBg, border: "1px solid rgba(23,32,27,0.06)" })}"><p style="${styleAttr(paragraph)}">${content}</p></section>`;
         }
 
         if (listStyle === "timeline") {
-          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "22px 1fr", gap: "10px", "align-items": "stretch" })}"><span style="${styleAttr({ position: "relative", display: "flex", "justify-content": "center", "align-items": "flex-start", "padding-top": "10px" })}"><i style="${styleAttr({ position: "absolute", top: "0", bottom: "0", left: "50%", width: "1px", background: "#dce3df", transform: "translateX(-50%)" })}"></i><i style="${styleAttr({ position: "relative", display: "block", width: "9px", height: "9px", "border-radius": "50%", background: style.accent })}"></i></span><p style="${styleAttr({ ...paragraph, padding: "0 0 15px" })}">${content}</p></div>`;
+          return `<section style="${styleAttr({ margin: "0 0 0 6px", padding: "0 0 15px 18px", "border-left": "1px solid #dce3df" })}"><span style="${styleAttr({ display: "inline-block", width: "9px", height: "9px", "border-radius": "50%", background: style.accent, "margin-left": "-23px", "margin-right": "14px", "margin-top": "8px", "vertical-align": "top" })}">&nbsp;</span><span style="${styleAttr({ display: "inline-block", width: "calc(100% - 2px)", "vertical-align": "top" })}"><p style="${styleAttr(paragraph)}">${content}</p></span></section>`;
         }
 
         if (listStyle === "bullet") {
-          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "18px 1fr", gap: "9px", "align-items": "start" })}"><span style="${styleAttr({ width: "7px", height: "7px", "border-radius": "50%", background: style.accent, "margin-top": "10px", "justify-self": "center" })}"></span><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+          return `<section style="${styleAttr(row)}"><span style="${styleAttr({ ...markerWrap, width: "26px" })}"><span style="${styleAttr({ display: "inline-block", width: "7px", height: "7px", "border-radius": "50%", background: style.accent, "margin-top": "10px" })}">&nbsp;</span></span><span style="${styleAttr({ ...contentWrap, width: "calc(100% - 26px)" })}"><p style="${styleAttr(paragraph)}">${content}</p></span></section>`;
         }
 
         if (listStyle === "plain") {
-          return `<p style="${styleAttr({ ...paragraph, margin: "0" })}"><strong style="${styleAttr({ color: style.accent, "margin-right": "6px" })}">${index}.</strong>${content}</p>`;
+          return `<p style="${styleAttr({ ...paragraph, margin: "0 0 14px" })}"><strong style="${styleAttr({ color: style.accent, "margin-right": "6px" })}">${index}.</strong>${content}</p>`;
         }
 
-        return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "22px 1fr", gap: "10px", "align-items": "start" })}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="${styleAttr({ width: "20px", height: "20px", color: style.accent, "margin-top": "3px" })}"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12 2.3 2.4 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+        return `<section style="${styleAttr(row)}"><span style="${styleAttr({ ...markerWrap, width: "30px" })}"><span style="${styleAttr({ display: "inline-block", color: style.accent, "font-size": "18px", "line-height": "24px", "font-weight": "800" })}">✓</span></span><span style="${styleAttr({ ...contentWrap, width: "calc(100% - 30px)" })}"><p style="${styleAttr(paragraph)}">${content}</p></span></section>`;
       }
 
       function buildArticle(parsed) {
@@ -2257,7 +2267,7 @@
 
         function closeList() {
           if (listOpen) {
-            parts.push("</div>");
+            parts.push("</section>");
             listOpen = false;
           }
         }
@@ -2454,13 +2464,39 @@
         return before.split(/\n+/).reverse().map(previewAnchorFromText).find(Boolean) || "";
       }
 
+      function isBlockDraftReplacement(replacement) {
+        return /^\[\[(section|quote|divider|list):/.test(replacement.trim());
+      }
+
+      function buildDraftSelectionValue(before, replacement, after) {
+        if (!isBlockDraftReplacement(replacement)) {
+          return {
+            value: `${before}${replacement}${after}`,
+            cursor: before.length + replacement.length
+          };
+        }
+
+        const cleanBefore = before.replace(/[ \t]+$/g, "").replace(/\n{3,}$/g, "\n\n");
+        const cleanAfter = after.replace(/^[ \t]+/g, "").replace(/^\n{3,}/g, "\n\n");
+        const cleanReplacement = replacement.trim();
+        const beforeGap = cleanBefore && !cleanBefore.endsWith("\n\n") ? cleanBefore.endsWith("\n") ? "\n" : "\n\n" : "";
+        const afterGap = cleanAfter && !cleanAfter.startsWith("\n\n") ? cleanAfter.startsWith("\n") ? "\n" : "\n\n" : "";
+        const valueBeforeCursor = `${cleanBefore}${beforeGap}${cleanReplacement}`;
+
+        return {
+          value: `${valueBeforeCursor}${afterGap}${cleanAfter}`,
+          cursor: valueBeforeCursor.length
+        };
+      }
+
       function replaceDraftSelection(replacement, start, end, previewAnchorText = "") {
         const scrollTop = els.draft.scrollTop;
         const scrollLeft = els.draft.scrollLeft;
         const before = els.draft.value.slice(0, start);
         const after = els.draft.value.slice(end);
-        els.draft.value = `${before}${replacement}${after}`;
-        const cursor = start + replacement.length;
+        const nextDraft = buildDraftSelectionValue(before, replacement, after);
+        els.draft.value = nextDraft.value;
+        const cursor = nextDraft.cursor;
         try {
           els.draft.focus({ preventScroll: true });
         } catch (error) {
@@ -2494,9 +2530,7 @@
 
         const before = text.slice(0, start);
         const after = text.slice(end);
-        const beforeGap = !before || before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
-        const afterGap = !after || after.startsWith("\n\n") ? "" : after.startsWith("\n") ? "\n" : "\n\n";
-        const replacement = `${beforeGap}[[divider:${value}]]${afterGap}`;
+        const replacement = `[[divider:${value}]]`;
         const previewAnchor = nearbyPreviewAnchor(before, after);
 
         state.dividerStyle = value;
@@ -2522,9 +2556,9 @@
         let replacement = "";
 
         if (stateKey === "sectionStyle") {
-          replacement = `\n\n[[section:${value}]]${trimmed.replace(/\s+/g, " ")}\n\n`;
+          replacement = `[[section:${value}]]${trimmed.replace(/\s+/g, " ")}`;
         } else if (stateKey === "leadStyle") {
-          replacement = `\n\n[[quote:${value}]]${trimmed}\n\n`;
+          replacement = `[[quote:${value}]]${trimmed}`;
         } else if (stateKey === "emphasisStyle") {
           let emphasisStart = start;
           let emphasisEnd = end;
@@ -2547,14 +2581,14 @@
             .map((line) => line.trim().replace(/^(\d+)[.、]\s*/, ""))
             .filter(Boolean);
           if (!items.length) return false;
-          replacement = `\n\n[[list:${value}]]\n${items.join("\n")}\n[[/list]]\n\n`;
+          replacement = `[[list:${value}]]\n${items.join("\n")}\n[[/list]]`;
           replaceDraftSelection(replacement, start, end, items[0]);
           toast("已应用到选中文本");
           return true;
         } else if (stateKey === "dividerStyle") {
           state.dividerStyle = value;
           els.dividerStyle.value = value;
-          replacement = `\n\n[[divider:${value}]]\n\n${trimmed}`;
+          replacement = `[[divider:${value}]]\n${trimmed}`;
         } else {
           return false;
         }
