@@ -1,0 +1,2753 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>公众号排版助手</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8f5;
+        --panel: #ffffff;
+        --panel-soft: #f1f6f0;
+        --ink: #17201b;
+        --muted: #66726c;
+        --subtle: #8d9792;
+        --line: #dce3df;
+        --line-strong: #c7d2cc;
+        --brand: #07945f;
+        --brand-dark: #057448;
+        --brand-soft: #e6f4ed;
+        --coral: #e7675a;
+        --coral-soft: #fff0ee;
+        --amber: #d49b22;
+        --blue: #3976c8;
+        --shadow: 0 12px 32px rgba(25, 42, 34, 0.08);
+        --radius: 8px;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        --serif: "Iowan Old Style", "Songti SC", "STSong", "SimSun", serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        height: 100%;
+        min-height: 100%;
+        overflow: hidden;
+        background:
+          linear-gradient(120deg, rgba(7, 148, 95, 0.06), transparent 30%),
+          radial-gradient(circle at 90% 18%, rgba(231, 103, 90, 0.08), transparent 24rem),
+          var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+
+      button,
+      textarea,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      textarea:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 3px solid rgba(7, 148, 95, 0.2);
+        outline-offset: 2px;
+      }
+
+      .app {
+        height: 100vh;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: 68px 1fr;
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 0 24px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.84);
+        backdrop-filter: blur(14px);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 220px;
+      }
+
+      .mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(7, 148, 95, 0.18);
+      }
+
+      .mark svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .ghost-btn,
+      .primary-btn,
+      .plain-btn {
+        min-height: 40px;
+        border-radius: var(--radius);
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .ghost-btn {
+        color: var(--ink);
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      .plain-btn {
+        color: var(--brand-dark);
+        background: transparent;
+        padding: 0 8px;
+      }
+
+      .primary-btn {
+        color: #fff;
+        background: var(--brand);
+      }
+
+      .primary-btn:hover {
+        background: var(--brand-dark);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(320px, 28vw) minmax(340px, 30vw) minmax(390px, 1fr);
+        grid-template-areas: "draft settings preview";
+        grid-template-rows: minmax(0, 1fr);
+        height: calc(100vh - 68px);
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.72);
+        border-right: 1px solid var(--line);
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .draft-panel {
+        grid-area: draft;
+      }
+
+      .draft-panel .panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+
+      .settings-panel {
+        grid-area: settings;
+      }
+
+      .panel-header {
+        padding: 22px 24px 14px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .panel-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        flex: 0 0 auto;
+      }
+
+      .panel-actions .plain-btn {
+        width: auto;
+        min-height: 32px;
+        padding: 0 8px;
+        font-size: 13px;
+      }
+
+      .panel-title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .editor-area {
+        padding: 0 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .draft {
+        width: 100%;
+        min-height: 360px;
+        flex: 1;
+        resize: vertical;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        padding: 18px;
+        color: var(--ink);
+        background: #fff;
+        line-height: 1.75;
+      }
+
+      .row-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--subtle);
+        font-size: 12px;
+        margin-top: -12px;
+      }
+
+      .style-shell {
+        display: grid;
+        gap: 10px;
+      }
+
+      .style-heading-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .style-count {
+        color: var(--subtle);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .style-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .style-filter {
+        min-height: 30px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 0 10px;
+        background: #fff;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .style-filter.is-active {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand-dark);
+      }
+
+      .style-list {
+        display: grid;
+        gap: 10px;
+        max-height: 456px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .style-option {
+        width: 100%;
+        text-align: left;
+        display: grid;
+        grid-template-columns: 42px 1fr 24px;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .style-option:hover {
+        border-color: var(--option-accent);
+      }
+
+      .style-option.is-active {
+        border-color: var(--option-accent);
+        background: var(--option-bg);
+      }
+
+      .style-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius);
+        display: grid;
+        place-items: center;
+      }
+
+      .style-icon svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      .style-copy strong {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 2px;
+      }
+
+      .style-copy span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .style-palette {
+        display: flex;
+        gap: 4px;
+        margin-top: 7px;
+      }
+
+      .style-swatch {
+        width: 18px;
+        height: 5px;
+        border-radius: 999px;
+        border: 1px solid rgba(23, 32, 27, 0.08);
+      }
+
+      .check {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 1px solid var(--line-strong);
+        display: grid;
+        place-items: center;
+        color: transparent;
+      }
+
+      .is-active .check {
+        color: #fff;
+        background: var(--option-accent);
+        border-color: var(--option-accent);
+      }
+
+      .generate {
+        min-height: 50px;
+        font-size: 16px;
+        width: 100%;
+      }
+
+      .preview-zone {
+        grid-area: preview;
+        min-width: 0;
+        min-height: 0;
+        padding: 22px 28px 28px;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .preview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .preview-head h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .view-switch {
+        display: inline-flex;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: var(--radius);
+        padding: 3px;
+      }
+
+      .view-switch button {
+        min-height: 32px;
+        border-radius: 6px;
+        padding: 0 12px;
+        color: var(--muted);
+        background: transparent;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .view-switch button.is-active {
+        background: var(--brand-soft);
+        color: var(--brand-dark);
+      }
+
+      .phone-wrap {
+        flex: 0 0 auto;
+        display: grid;
+        place-items: start center;
+        overflow: visible;
+        padding: 0 0 16px;
+      }
+
+      .phone {
+        width: min(420px, 100%);
+        min-height: 760px;
+        border-radius: 42px;
+        padding: 13px;
+        background: linear-gradient(145deg, #eef1ed, #ffffff);
+        border: 1px solid #d8dfdb;
+        box-shadow: var(--shadow);
+      }
+
+      .phone-screen {
+        min-height: 734px;
+        border-radius: 32px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #e4e8e5;
+      }
+
+      .phone-status {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .status-icons {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+      }
+
+      .signal {
+        width: 16px;
+        height: 10px;
+        border-radius: 2px;
+        background: linear-gradient(to right, #111 20%, transparent 20% 30%, #111 30% 50%, transparent 50% 60%, #111 60% 80%, transparent 80%);
+      }
+
+      .battery {
+        width: 22px;
+        height: 11px;
+        border: 1.5px solid #111;
+        border-radius: 3px;
+        position: relative;
+      }
+
+      .battery::before {
+        content: "";
+        position: absolute;
+        width: 12px;
+        height: 5px;
+        left: 3px;
+        top: 2px;
+        background: #111;
+      }
+
+      .wx-bar {
+        height: 42px;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #111;
+      }
+
+      .wx-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 7px 0 0 currentColor, 14px 0 0 currentColor;
+      }
+
+      .article {
+        padding: 18px 28px 44px;
+      }
+
+      .article h2 {
+        margin: 0 0 14px;
+        color: var(--title-color, #151515);
+        font-size: 26px;
+        line-height: 1.34;
+        letter-spacing: 0;
+        text-wrap: balance;
+      }
+
+      .article-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        color: #8a8f8d;
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 18px;
+      }
+
+      .tag-original {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 6px;
+        border-radius: 5px;
+        background: #f1f2f1;
+        color: #7b817e;
+        font-size: 12px;
+      }
+
+      .lead-card {
+        margin: 18px 0 22px;
+        padding: 18px 18px 18px 20px;
+        border-radius: var(--radius);
+        background: linear-gradient(135deg, var(--lead-bg), #fff);
+        color: #2a3832;
+        font-size: 15px;
+        line-height: 1.75;
+        position: relative;
+      }
+
+      .lead-card::before {
+        content: "“";
+        position: absolute;
+        left: 11px;
+        top: 2px;
+        color: var(--accent);
+        font-family: Georgia, serif;
+        font-size: 44px;
+        line-height: 1;
+        opacity: 0.85;
+      }
+
+      .lead-card p {
+        margin: 0 0 0 22px;
+      }
+
+      .article p {
+        margin: 14px 0;
+        color: #232826;
+        font-size: var(--body-size);
+        line-height: var(--body-line);
+        text-align: justify;
+      }
+
+      .article-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 26px 0 14px;
+        color: #161d19;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
+      .section-num {
+        width: 36px;
+        height: 32px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: var(--accent);
+        font-size: 16px;
+        font-weight: 800;
+        flex: 0 0 auto;
+      }
+
+      .article-list {
+        display: grid;
+        gap: 13px;
+        margin: 16px 0;
+      }
+
+      .article-list-item {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .article-list-item svg {
+        width: 20px;
+        height: 20px;
+        color: var(--accent);
+        margin-top: 3px;
+      }
+
+      .article-list-item p {
+        margin: 0;
+      }
+
+      .settings {
+        padding: 0 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .settings-style-shell {
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .settings-style-shell .style-list {
+        max-height: 360px;
+      }
+
+      .field {
+        display: grid;
+        gap: 10px;
+      }
+
+      .field label {
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1.25;
+      }
+
+      .setting-title {
+        font-size: 15px;
+        font-weight: 850;
+        line-height: 1.25;
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+        padding: 0 12px;
+        color: var(--ink);
+      }
+
+      #titleLayoutSelect,
+      #sectionStyleSelect,
+      #leadStyleSelect,
+      #emphasisStyleSelect,
+      #listStyleSelect,
+      #dividerStyleSelect {
+        display: none;
+      }
+
+      .settings-section {
+        display: grid;
+        gap: 16px;
+        padding: 16px 0 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .settings-section-title {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--ink);
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.25;
+      }
+
+      .settings-section-title::before {
+        content: "";
+        width: 5px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--brand);
+        flex: 0 0 auto;
+      }
+
+      .visual-picker {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .visual-card {
+        min-height: 106px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+        color: var(--ink);
+        padding: 10px;
+        display: grid;
+        align-content: space-between;
+        gap: 8px;
+        text-align: left;
+      }
+
+      .visual-card:hover {
+        border-color: var(--option-accent, var(--brand));
+      }
+
+      .visual-card.is-active {
+        border-color: var(--option-accent, var(--brand));
+        background: var(--option-bg, var(--brand-soft));
+      }
+
+      .visual-card strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 850;
+        line-height: 1.35;
+      }
+
+      .visual-card-note {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin-top: 3px;
+      }
+
+      .mini-preview {
+        min-height: 45px;
+        border-radius: 6px;
+        background: #fafcfb;
+        color: #17201b;
+        padding: 8px;
+        overflow: hidden;
+      }
+
+      .mini-preview-line {
+        height: 7px;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.18;
+      }
+
+      .mini-preview-line + .mini-preview-line {
+        margin-top: 6px;
+      }
+
+      .color-field {
+        display: grid;
+        grid-template-columns: 46px 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .color-field input[type="color"] {
+        min-height: 42px;
+        padding: 3px;
+      }
+
+      .color-value {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+        padding: 0 10px;
+        color: var(--muted);
+        font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+
+      .mini-btn {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #fff;
+        color: var(--brand-dark);
+        padding: 0 10px;
+        font-size: 13px;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 14px;
+      }
+
+      .toggle-row span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 3px;
+        line-height: 1.4;
+      }
+
+      .switch {
+        width: 44px;
+        height: 24px;
+        border-radius: 999px;
+        background: #d7ded9;
+        padding: 3px;
+        flex: 0 0 auto;
+      }
+
+      .switch[aria-checked="true"] {
+        background: var(--brand);
+      }
+
+      .switch::before {
+        content: "";
+        display: block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 160ms ease;
+      }
+
+      .switch[aria-checked="true"]::before {
+        transform: translateX(20px);
+      }
+
+      .summary {
+        display: grid;
+        gap: 8px;
+        border-radius: var(--radius);
+        background: linear-gradient(145deg, var(--panel-soft), #fff);
+        border: 1px solid #e3ebe6;
+        padding: 16px;
+      }
+
+      .summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .summary-row strong {
+        color: var(--ink);
+        font-weight: 750;
+      }
+
+      .output-actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .preview-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 16px;
+      }
+
+      .output-actions .primary-btn,
+      .output-actions .ghost-btn {
+        width: 100%;
+        min-height: 48px;
+        font-size: 15px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 10;
+        min-width: 220px;
+        max-width: calc(100vw - 44px);
+        padding: 12px 14px;
+        border-radius: var(--radius);
+        background: #13251c;
+        color: #fff;
+        box-shadow: var(--shadow);
+        transform: translateY(20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease, transform 180ms ease;
+        font-size: 14px;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .desktop-preview .phone {
+        width: min(760px, 100%);
+        border-radius: 12px;
+      }
+
+      .desktop-preview .phone-screen {
+        border-radius: 8px;
+      }
+
+      .desktop-preview .phone-status,
+      .desktop-preview .wx-bar {
+        display: none;
+      }
+
+      .desktop-preview .article {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 46px 52px 64px;
+      }
+
+      @media (max-width: 1120px) {
+        .workspace {
+          grid-template-columns: 360px 1fr;
+          grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-areas:
+            "draft settings"
+            "preview preview";
+        }
+
+        .settings-panel {
+          border-right: 0;
+        }
+
+        .preview-zone {
+          border-top: 1px solid var(--line);
+        }
+
+        .settings {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(240px, 1fr));
+          align-items: start;
+        }
+
+        .settings-style-shell {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 760px) {
+        html,
+        body {
+          height: auto;
+          min-height: 100%;
+          overflow: auto;
+        }
+
+        .app {
+          height: auto;
+          min-height: 100vh;
+          grid-template-rows: auto 1fr;
+          overflow: visible;
+        }
+
+        .topbar {
+          position: static;
+          padding: 14px 16px;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .top-actions {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .workspace {
+          display: grid;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          grid-template-areas:
+            "draft"
+            "settings"
+            "preview";
+          height: auto;
+          min-height: 0;
+          overflow: visible;
+        }
+
+        .panel,
+        .settings-panel {
+          border-right: 0;
+          border-left: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .preview-zone {
+          border-top: 0;
+        }
+
+        .panel,
+        .editor-area,
+        .settings,
+        .preview-zone {
+          overflow: visible;
+        }
+
+        .panel-header,
+        .editor-area,
+        .preview-zone,
+        .settings {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .draft {
+          min-height: 260px;
+        }
+
+        .settings,
+        .preview-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .style-list {
+          max-height: 520px;
+        }
+
+        .preview-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .phone {
+          border-radius: 24px;
+        }
+
+        .phone-screen {
+          border-radius: 18px;
+        }
+
+        .article {
+          padding: 16px 20px 34px;
+        }
+
+        .article h2 {
+          font-size: 23px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 12.6 10.1 16 17.4 8" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <h1>公众号排版助手</h1>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="sampleBtn" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 4h10l4 4v12H5V4Z" stroke="currentColor" stroke-width="1.8" />
+              <path d="M15 4v5h5M8 13h8M8 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            示例草稿
+          </button>
+          <button class="primary-btn" id="downloadBtn" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4v10m0 0 4-4m-4 4-4-4M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            导出 HTML
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel draft-panel" aria-labelledby="draftTitle">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title" id="draftTitle">粘贴草稿</h2>
+              <p class="hint">直接放入标题和正文；小标题、引用、列表等样式可选中文本后自行应用。</p>
+            </div>
+            <div class="panel-actions">
+              <button class="plain-btn" id="clearStylesBtn" type="button">清空样式</button>
+              <button class="plain-btn" id="clearBtn" type="button">清空内容</button>
+            </div>
+          </div>
+
+          <div class="editor-area">
+            <textarea class="draft" id="draftInput" spellcheck="false"></textarea>
+            <div class="row-meta">
+              <span>建议先保留空行，段落会更清楚</span>
+              <span id="wordCount">0 字</span>
+            </div>
+
+            <button class="primary-btn generate" id="generateBtn" type="button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M13 3 5 14h6l-1 7 8-11h-6l1-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+              生成排版
+            </button>
+          </div>
+        </section>
+
+        <section class="preview-zone" aria-labelledby="previewTitle">
+          <div class="preview-head">
+            <h2 id="previewTitle">预览</h2>
+            <div class="view-switch" aria-label="预览模式">
+              <button class="is-active" type="button" data-view="mobile">手机预览</button>
+              <button type="button" data-view="desktop">电脑预览</button>
+            </div>
+          </div>
+
+          <div class="phone-wrap" id="previewWrap">
+            <div class="phone">
+              <div class="phone-screen">
+                <div class="phone-status">
+                  <span>9:41</span>
+                  <span class="status-icons"><span class="signal"></span><span class="battery"></span></span>
+                </div>
+                <div class="wx-bar">
+                  <span aria-hidden="true">×</span>
+                  <span class="wx-dot" aria-hidden="true"></span>
+                </div>
+                <article class="article" id="articlePreview"></article>
+              </div>
+            </div>
+          </div>
+
+          <div class="output-actions preview-actions">
+            <button class="primary-btn" id="copyHtmlBtn" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="8" y="8" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              复制 HTML
+            </button>
+            <button class="ghost-btn" id="copyTextBtn" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 7h8M8 11h8M8 15h5M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              复制纯文本
+            </button>
+            <button class="ghost-btn" id="copyMarkdownBtn" type="button">复制 Markdown</button>
+          </div>
+        </section>
+
+        <aside class="panel settings-panel" aria-labelledby="outputTitle">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title" id="outputTitle">输出设置</h2>
+              <p class="hint">选中文本后点组件可局部应用；未选中时作为全局样式。</p>
+            </div>
+          </div>
+
+          <div class="settings">
+            <div class="style-shell settings-style-shell">
+              <div class="style-heading-row">
+                <h3 class="panel-title">视觉风格</h3>
+                <span class="style-count" id="styleCount">0 个风格</span>
+              </div>
+              <div class="style-filters" id="styleFilters" aria-label="风格分类"></div>
+              <div class="style-list" id="styleList"></div>
+            </div>
+
+            <div class="field">
+              <label for="fontSelect">正文字号</label>
+              <select id="fontSelect">
+                <option value="16">16px 标准</option>
+                <option value="15">15px 紧凑</option>
+                <option value="17">17px 舒展</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="bodyFontSelect">正文字体</label>
+              <select id="bodyFontSelect">
+                <option value="sans">黑体 / 系统默认</option>
+                <option value="serif">宋体 / 书面阅读</option>
+                <option value="fangsong">仿宋 / 叙事感</option>
+              </select>
+            </div>
+
+            <div class="settings-section">
+              <h3 class="settings-section-title">标题组件</h3>
+              <div class="field">
+                <label for="titleLayoutSelect">主标题布局</label>
+                <select id="titleLayoutSelect">
+                  <option value="standard">工具文标题</option>
+                  <option value="magazine">杂志封面题</option>
+                  <option value="badge">访谈栏目题</option>
+                  <option value="center">口述居中题</option>
+                  <option value="framed">案例框题</option>
+                  <option value="underline">数据下划题</option>
+                </select>
+                <div class="visual-picker" id="titleLayoutPicker"></div>
+              </div>
+
+              <div class="field">
+                <label for="sectionStyleSelect">小标题样式</label>
+                <select id="sectionStyleSelect">
+                  <option value="underline">杂志章节标题</option>
+                  <option value="ribbon">创意案例标题</option>
+                  <option value="capsule">清单标签标题</option>
+                  <option value="quoteFrame">边框引语标题</option>
+                  <option value="frameSoft">上下线引语标题</option>
+                  <option value="redbarCompact">短竖条标题</option>
+                  <option value="slashMain">斜杠主副标题</option>
+                  <option value="slashSimple">斜杠栏目标题</option>
+                  <option value="centerNumber">居中编号标题</option>
+                  <option value="leftNumber">左侧编号标题</option>
+                </select>
+                <div class="visual-picker" id="sectionStylePicker"></div>
+              </div>
+
+              <div class="field">
+                <label for="titleSizeSelect">标题字号</label>
+                <select id="titleSizeSelect">
+                  <option value="24">24px 紧凑</option>
+                  <option value="26" selected>26px 标准</option>
+                  <option value="28">28px 醒目</option>
+                  <option value="30">30px 大标题</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="titleColorInput">标题颜色</label>
+                <div class="color-field">
+                  <input id="titleColorInput" type="color" value="#151515" aria-label="标题颜色" />
+                  <span class="color-value" id="titleColorValue">#151515</span>
+                  <button class="mini-btn" id="resetTitleColorBtn" type="button">跟随风格</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3 class="settings-section-title">引言 / 引用组件</h3>
+              <div class="field">
+                <label for="leadStyleSelect">引用呈现</label>
+                <select id="leadStyleSelect">
+                  <option value="summary">工具摘要</option>
+                  <option value="plain">杂志题记</option>
+                  <option value="lineQuote">左线长引用</option>
+                  <option value="quote">人物语录</option>
+                  <option value="outline">案例背景</option>
+                  <option value="center">影像旁白</option>
+                  <option value="soft">轻提示</option>
+                </select>
+                <div class="visual-picker" id="leadStylePicker"></div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h3 class="settings-section-title">正文组件</h3>
+              <div class="field">
+                <label for="emphasisStyleSelect">着重文字</label>
+                <select id="emphasisStyleSelect">
+                  <option value="strong">主色关键词</option>
+                  <option value="marker">工具高亮</option>
+                  <option value="underline">长文下划</option>
+                  <option value="tag">清单标签</option>
+                  <option value="box">数据结论框</option>
+                  <option value="wave">观点波点线</option>
+                </select>
+                <div class="visual-picker" id="emphasisStylePicker"></div>
+                <p class="hint">在草稿中用 **重点文字** 标记。</p>
+              </div>
+
+              <div class="field">
+                <label for="listStyleSelect">列表样式</label>
+                <select id="listStyleSelect">
+                  <option value="step">工具步骤</option>
+                  <option value="card">清单推荐卡</option>
+                  <option value="timeline">口述时间线</option>
+                  <option value="bullet">要点圆点</option>
+                  <option value="check">勾选清单</option>
+                  <option value="plain">影像短列</option>
+                </select>
+                <div class="visual-picker" id="listStylePicker"></div>
+              </div>
+
+              <div class="field">
+                <label for="dividerStyleSelect">分割线</label>
+                <select id="dividerStyleSelect">
+                  <option value="hairline">图文细线</option>
+                  <option value="short">长文短线</option>
+                  <option value="dots">访谈停顿点</option>
+                  <option value="label">创意标签分割</option>
+                  <option value="double">数据双线</option>
+                  <option value="wave">留白波点</option>
+                </select>
+                <div class="visual-picker" id="dividerStylePicker"></div>
+                <p class="hint">点击样式会在草稿光标处插入分割线；选中文本时插入到选中文本前。</p>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <strong class="setting-title">小标题前分割线</strong>
+                <span>适合长文分段和章节过渡</span>
+              </div>
+              <button class="switch" id="dividerToggle" type="button" role="switch" aria-checked="false" aria-label="小标题前显示分割线"></button>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <strong class="setting-title">追加版权说明</strong>
+                <span>适合转载、品牌号和团队协作</span>
+              </div>
+              <button class="switch" id="copyrightToggle" type="button" role="switch" aria-checked="false" aria-label="追加版权说明"></button>
+            </div>
+
+            <div class="summary" aria-live="polite">
+              <div class="summary-row"><span>当前风格</span><strong id="summaryStyle">清爽商务</strong></div>
+              <div class="summary-row"><span>字数</span><strong id="summaryWords">0</strong></div>
+              <div class="summary-row"><span>段落</span><strong id="summaryParagraphs">0</strong></div>
+              <div class="summary-row"><span>小标题</span><strong id="summaryHeadings">0</strong></div>
+              <div class="summary-row"><span>预计阅读</span><strong id="summaryRead">1 分钟</strong></div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const sampleDraft = `专注力：在信息洪流中，找回属于自己的节奏
+
+在信息爆炸的时代，专注力成为了**稀缺资源**。
+我们每天都被各种通知、消息和社交媒体推着走，注意力被不断切碎，时间也在不知不觉中溜走。
+
+**真正的高效**，不是做更多的事，而是把注意力集中在最重要的事情上。
+
+如何提升专注力？
+
+1. 明确目标，减少选择
+把每天最重要的 1-3 件事写下来，优先完成它们。
+
+2. 创造专注环境
+关闭不必要的通知，整理桌面，营造一个安静、整洁的空间。
+
+3. 使用番茄工作法
+25 分钟专注工作，5 分钟休息，大脑更容易保持高效。
+
+4. 定期复盘与调整
+每周回顾一次自己的时间流向，找到最容易分心的环节。
+
+专注不是天赋，而是一种可以被训练的能力。`;
+
+      const styles = {
+        business: {
+          name: "清爽商务",
+          desc: "简洁大气，层次清晰，适合干货分享",
+          group: "general",
+          accent: "#07945f",
+          leadBg: "#eef8f2",
+          iconBg: "#e6f4ed",
+          iconColor: "#07945f",
+          titleColor: "#151515",
+          bodySize: 16,
+          bodyLine: 1.82,
+          icon: "doc"
+        },
+        magazine: {
+          name: "温柔杂志",
+          desc: "柔和治愈，留白舒适，适合情感类文章",
+          group: "tone",
+          accent: "#e7675a",
+          leadBg: "#fff0ee",
+          iconBg: "#fff0ee",
+          iconColor: "#e7675a",
+          titleColor: "#2b211f",
+          bodySize: 16,
+          bodyLine: 1.9,
+          icon: "pen"
+        },
+        knowledge: {
+          name: "知识卡片",
+          desc: "卡片式布局，重点突出，适合知识总结",
+          group: "general",
+          accent: "#3976c8",
+          leadBg: "#edf4ff",
+          iconBg: "#edf4ff",
+          iconColor: "#3976c8",
+          titleColor: "#14223a",
+          bodySize: 15,
+          bodyLine: 1.78,
+          icon: "card"
+        },
+        opinion: {
+          name: "犀利观点",
+          desc: "强调论点，节奏更快，适合观点表达",
+          group: "tone",
+          accent: "#17201b",
+          leadBg: "#f1f2ef",
+          iconBg: "#f1f2ef",
+          iconColor: "#17201b",
+          titleColor: "#101413",
+          bodySize: 16,
+          bodyLine: 1.74,
+          icon: "quote"
+        },
+        campus: {
+          name: "活力青春",
+          desc: "活泼清新，配色明快，适合校园/成长类",
+          group: "scene",
+          accent: "#d49b22",
+          leadBg: "#fff7dd",
+          iconBg: "#fff7dd",
+          iconColor: "#d49b22",
+          titleColor: "#2a2414",
+          bodySize: 16,
+          bodyLine: 1.82,
+          icon: "spark"
+        },
+        minimalist: {
+          name: "极简黑白",
+          desc: "克制留白，适合声明、长文和深度思考",
+          group: "general",
+          accent: "#2f3437",
+          leadBg: "#f4f5f4",
+          iconBg: "#f4f5f4",
+          iconColor: "#2f3437",
+          titleColor: "#111312",
+          bodySize: 16,
+          bodyLine: 1.88,
+          icon: "minus"
+        },
+        news: {
+          name: "热点快讯",
+          desc: "信息密度高，适合新闻、公告和事件复盘",
+          group: "scene",
+          accent: "#c43d32",
+          leadBg: "#fff1ef",
+          iconBg: "#fff1ef",
+          iconColor: "#c43d32",
+          titleColor: "#241817",
+          bodySize: 16,
+          bodyLine: 1.76,
+          icon: "bolt"
+        },
+        brand: {
+          name: "品牌发布",
+          desc: "稳重有记忆点，适合新品、活动和品牌动态",
+          group: "scene",
+          accent: "#6c5ce7",
+          leadBg: "#f1efff",
+          iconBg: "#f1efff",
+          iconColor: "#6c5ce7",
+          titleColor: "#201c3d",
+          bodySize: 16,
+          bodyLine: 1.82,
+          icon: "flag"
+        },
+        finance: {
+          name: "财经深度",
+          desc: "冷静可信，适合行业分析、复盘和研报摘读",
+          group: "industry",
+          accent: "#0f766e",
+          leadBg: "#eaf7f5",
+          iconBg: "#eaf7f5",
+          iconColor: "#0f766e",
+          titleColor: "#102925",
+          bodySize: 16,
+          bodyLine: 1.8,
+          icon: "chart"
+        },
+        tech: {
+          name: "科技蓝图",
+          desc: "理性清晰，适合产品、AI、工具和技术文章",
+          group: "industry",
+          accent: "#2563eb",
+          leadBg: "#edf4ff",
+          iconBg: "#edf4ff",
+          iconColor: "#2563eb",
+          titleColor: "#111f3d",
+          bodySize: 15,
+          bodyLine: 1.78,
+          icon: "lab"
+        },
+        humanities: {
+          name: "人文书房",
+          desc: "沉静耐读，适合读书、历史和文化随笔",
+          group: "tone",
+          accent: "#8b5a2b",
+          leadBg: "#f7f0e8",
+          iconBg: "#f7f0e8",
+          iconColor: "#8b5a2b",
+          titleColor: "#2f241a",
+          bodySize: 17,
+          bodyLine: 1.94,
+          icon: "book"
+        },
+        wellness: {
+          name: "生活疗愈",
+          desc: "舒缓亲近，适合健康、生活方式和个人成长",
+          group: "industry",
+          accent: "#2f855a",
+          leadBg: "#edf8f1",
+          iconBg: "#edf8f1",
+          iconColor: "#2f855a",
+          titleColor: "#17291f",
+          bodySize: 16,
+          bodyLine: 1.9,
+          icon: "leaf"
+        },
+        event: {
+          name: "活动招募",
+          desc: "节奏更亮，适合课程、社群、直播和报名推送",
+          group: "scene",
+          accent: "#ea7a1f",
+          leadBg: "#fff3e6",
+          iconBg: "#fff3e6",
+          iconColor: "#ea7a1f",
+          titleColor: "#302012",
+          bodySize: 16,
+          bodyLine: 1.78,
+          icon: "ticket"
+        }
+      };
+
+      const styleGroups = [
+        { key: "all", name: "全部" },
+        { key: "general", name: "通用" },
+        { key: "tone", name: "表达" },
+        { key: "industry", name: "行业" },
+        { key: "scene", name: "场景" }
+      ];
+
+      const bodyFonts = {
+        sans: "-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif",
+        serif: "'Songti SC','STSong','SimSun','Noto Serif CJK SC',serif",
+        fangsong: "'FangSong','FangSong_GB2312','STFangsong','KaiTi',serif"
+      };
+
+      const defaultStyleState = {
+        style: "tech",
+        styleGroup: "all",
+        bodyFont: "sans",
+        titleLayout: "standard",
+        sectionStyle: "underline",
+        titleSize: 26,
+        titleColor: "",
+        leadStyle: "summary",
+        emphasisStyle: "marker",
+        listStyle: "step",
+        dividerStyle: "hairline",
+        showDividers: false,
+        showLead: false,
+        showCopyright: false
+      };
+
+      const state = {
+        ...defaultStyleState,
+        view: "mobile",
+        html: "",
+        text: "",
+        markdown: ""
+      };
+
+      const els = {
+        draft: document.querySelector("#draftInput"),
+        wordCount: document.querySelector("#wordCount"),
+        styleFilters: document.querySelector("#styleFilters"),
+        styleCount: document.querySelector("#styleCount"),
+        styleList: document.querySelector("#styleList"),
+        preview: document.querySelector("#articlePreview"),
+        previewZone: document.querySelector(".preview-zone"),
+        previewWrap: document.querySelector("#previewWrap"),
+        font: document.querySelector("#fontSelect"),
+        bodyFont: document.querySelector("#bodyFontSelect"),
+        titleLayout: document.querySelector("#titleLayoutSelect"),
+        sectionStyle: document.querySelector("#sectionStyleSelect"),
+        titleSize: document.querySelector("#titleSizeSelect"),
+        titleColor: document.querySelector("#titleColorInput"),
+        titleColorValue: document.querySelector("#titleColorValue"),
+        resetTitleColor: document.querySelector("#resetTitleColorBtn"),
+        leadStyle: document.querySelector("#leadStyleSelect"),
+        titleLayoutPicker: document.querySelector("#titleLayoutPicker"),
+        sectionStylePicker: document.querySelector("#sectionStylePicker"),
+        leadStylePicker: document.querySelector("#leadStylePicker"),
+        emphasisStylePicker: document.querySelector("#emphasisStylePicker"),
+        listStylePicker: document.querySelector("#listStylePicker"),
+        dividerStylePicker: document.querySelector("#dividerStylePicker"),
+        emphasisStyle: document.querySelector("#emphasisStyleSelect"),
+        listStyle: document.querySelector("#listStyleSelect"),
+        dividerStyle: document.querySelector("#dividerStyleSelect"),
+        dividerToggle: document.querySelector("#dividerToggle"),
+        copyrightToggle: document.querySelector("#copyrightToggle"),
+        toast: document.querySelector("#toast"),
+        summaryStyle: document.querySelector("#summaryStyle"),
+        summaryWords: document.querySelector("#summaryWords"),
+        summaryParagraphs: document.querySelector("#summaryParagraphs"),
+        summaryHeadings: document.querySelector("#summaryHeadings"),
+        summaryRead: document.querySelector("#summaryRead")
+      };
+
+      const icons = {
+        doc: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 4h8l4 4v12H6V4Z" stroke="currentColor" stroke-width="1.8"/><path d="M14 4v5h5M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        pen: '<svg viewBox="0 0 24 24" fill="none"><path d="m5 16-.8 3.8L8 19l9.7-9.7-3-3L5 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m13.8 7.2 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        card: '<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        quote: '<svg viewBox="0 0 24 24" fill="none"><path d="M8 10h3v7H5v-5c0-3.2 1.5-5.2 4.5-6M17 10h3v7h-6v-5c0-3.2 1.5-5.2 4.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        spark: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        minus: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 7h10M7 17h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".55"/></svg>',
+        bolt: '<svg viewBox="0 0 24 24" fill="none"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        flag: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 21V4m0 1h10l-1.8 4L16 13H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        chart: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 19V5M5 19h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m8 15 3.2-4 3 2.4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        lab: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6M10 3v5l-4.7 8.2A3.2 3.2 0 0 0 8 21h8a3.2 3.2 0 0 0 2.7-4.8L14 8V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 15h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        book: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v16H7.5A2.5 2.5 0 0 0 5 21V5.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 17.5A2.5 2.5 0 0 1 7.5 15H19" stroke="currentColor" stroke-width="1.8"/></svg>',
+        leaf: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 19c8 0 14-5.5 14-14C10 5 5 10.2 5 19Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 19c2.5-5.2 6-8 11-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        ticket: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2.2a2 2 0 0 0 0 3.6V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.2a2 2 0 0 0 0-3.6V8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9h6M9 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+      };
+
+      const componentPickers = [
+        {
+          stateKey: "titleLayout",
+          selectKey: "titleLayout",
+          hostKey: "titleLayoutPicker",
+          options: [
+            { value: "standard", label: "工具文标题", note: "清晰直接", preview: "title-standard" },
+            { value: "magazine", label: "杂志封面题", note: "长文慢读", preview: "title-magazine" },
+            { value: "badge", label: "访谈栏目题", note: "节目/专栏", preview: "title-badge" },
+            { value: "center", label: "口述居中题", note: "人物故事", preview: "title-center" },
+            { value: "framed", label: "案例框题", note: "品牌案例", preview: "title-framed" },
+            { value: "underline", label: "数据下划题", note: "报告结论", preview: "title-underline" }
+          ]
+        },
+        {
+          stateKey: "sectionStyle",
+          selectKey: "sectionStyle",
+          hostKey: "sectionStylePicker",
+          options: [
+            { value: "underline", label: "杂志章节标题", note: "深度长文", preview: "section-underline" },
+            { value: "ribbon", label: "创意案例标题", note: "品牌拆解", preview: "section-ribbon" },
+            { value: "capsule", label: "清单标签标题", note: "推荐排行", preview: "section-capsule" },
+            { value: "quoteFrame", label: "边框引语标题", note: "强观点", preview: "section-quote-frame" },
+            { value: "frameSoft", label: "上下线引语标题", note: "观点延展", preview: "section-frame-soft" },
+            { value: "redbarCompact", label: "短竖条标题", note: "段落提示", preview: "section-redbar-compact" },
+            { value: "slashMain", label: "斜杠主副标题", note: "年度主题", preview: "section-slash-main" },
+            { value: "slashSimple", label: "斜杠栏目标题", note: "栏目提示", preview: "section-slash-simple" },
+            { value: "centerNumber", label: "居中编号标题", note: "章节提问", preview: "section-center-number" },
+            { value: "leftNumber", label: "左侧编号标题", note: "章节推进", preview: "section-left-number" }
+          ]
+        },
+        {
+          stateKey: "leadStyle",
+          selectKey: "leadStyle",
+          hostKey: "leadStylePicker",
+          options: [
+            { value: "summary", label: "工具摘要", note: "先给要点", preview: "lead-summary" },
+            { value: "plain", label: "杂志题记", note: "克制耐读", preview: "lead-plain" },
+            { value: "lineQuote", label: "左线长引用", note: "长段引用", preview: "lead-line-quote" },
+            { value: "quote", label: "人物语录", note: "访谈引用", preview: "lead-quote" },
+            { value: "outline", label: "案例背景", note: "强调开场", preview: "lead-outline" },
+            { value: "center", label: "影像旁白", note: "短句氛围", preview: "lead-center" },
+            { value: "soft", label: "轻提示", note: "温和说明", preview: "lead-soft" }
+          ]
+        },
+        {
+          stateKey: "emphasisStyle",
+          selectKey: "emphasisStyle",
+          hostKey: "emphasisStylePicker",
+          options: [
+            { value: "strong", label: "主色关键词", note: "观点加重", preview: "emphasis-strong" },
+            { value: "marker", label: "工具高亮", note: "干货标记", preview: "emphasis-marker" },
+            { value: "underline", label: "长文下划", note: "低调重点", preview: "emphasis-underline" },
+            { value: "tag", label: "清单标签", note: "推荐卖点", preview: "emphasis-tag" },
+            { value: "box", label: "数据结论框", note: "核心结论", preview: "emphasis-box" },
+            { value: "wave", label: "观点波点线", note: "轻表达", preview: "emphasis-wave" }
+          ]
+        },
+        {
+          stateKey: "listStyle",
+          selectKey: "listStyle",
+          hostKey: "listStylePicker",
+          options: [
+            { value: "step", label: "工具步骤", note: "教程流程", preview: "list-step" },
+            { value: "card", label: "清单推荐卡", note: "消费决策", preview: "list-card" },
+            { value: "timeline", label: "口述时间线", note: "经历叙事", preview: "list-timeline" },
+            { value: "bullet", label: "要点圆点", note: "简短观点", preview: "list-bullet" },
+            { value: "check", label: "勾选清单", note: "行动列表", preview: "list-check" },
+            { value: "plain", label: "影像短列", note: "轻量说明", preview: "list-plain" }
+          ]
+        },
+        {
+          stateKey: "dividerStyle",
+          selectKey: "dividerStyle",
+          hostKey: "dividerStylePicker",
+          options: [
+            { value: "hairline", label: "图文细线", note: "轻分段", preview: "divider-hairline" },
+            { value: "short", label: "长文短线", note: "章节停顿", preview: "divider-short" },
+            { value: "dots", label: "访谈停顿点", note: "语气转换", preview: "divider-dots" },
+            { value: "label", label: "创意标签分割", note: "案例段落", preview: "divider-label" },
+            { value: "double", label: "数据双线", note: "结论分隔", preview: "divider-double" },
+            { value: "wave", label: "留白波点", note: "图文过渡", preview: "divider-wave" }
+          ]
+        }
+      ];
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function countChineseWords(text) {
+        return stripInlineSyntax(text).replace(/\s/g, "").length;
+      }
+
+      function stripInlineSyntax(text) {
+        return text
+          .replace(/\[\[em:[a-zA-Z0-9-]+\]\]([\s\S]*?)\[\[\/em\]\]/g, "$1")
+          .replace(/\[\[(section|quote|divider|list):[a-zA-Z0-9-]+\]\]/g, "")
+          .replace(/\[\[\/list\]\]/g, "")
+          .replace(/\*\*([^*]+)\*\*/g, "$1");
+      }
+
+      function clearDraftStyles(text) {
+        return text
+          .replace(/(^|\n+)\[\[divider:[a-zA-Z0-9-]+\]\][^\n]*(?=\n|$)/g, "$1")
+          .replace(/\[\[em:[a-zA-Z0-9-]+\]\]([\s\S]*?)\[\[\/em\]\]/g, "$1")
+          .replace(/\[\[section:[a-zA-Z0-9-]+\]\]/g, "")
+          .replace(/\[\[quote:[a-zA-Z0-9-]+\]\]/g, "")
+          .replace(/\[\[list:[a-zA-Z0-9-]+\]\]\n?/g, "")
+          .replace(/\n?\[\[\/list\]\]/g, "")
+          .replace(/\*\*([^*]+)\*\*/g, "$1")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+      }
+
+      function parseDraft(text) {
+        const blocks = text
+          .split(/\n{2,}/)
+          .map((block) => block.trim())
+          .filter(Boolean);
+
+        const title = blocks[0] || "未命名文章";
+        const bodyBlocks = blocks.slice(1);
+        const nodes = [];
+        let listRunId = 0;
+        let activeAutoListGroup = "";
+
+        bodyBlocks.forEach((block) => {
+          const sectionMatch = block.match(/^\[\[section:([a-zA-Z0-9-]+)\]\]([\s\S]+)$/);
+          if (sectionMatch) {
+            activeAutoListGroup = "";
+            nodes.push({ type: "heading", text: sectionMatch[2].trim().replace(/[：:]$/, ""), style: sectionMatch[1] });
+            return;
+          }
+
+          const quoteMatch = block.match(/^\[\[quote:([a-zA-Z0-9-]+)\]\]([\s\S]+)$/);
+          if (quoteMatch) {
+            activeAutoListGroup = "";
+            nodes.push({ type: "quote", text: quoteMatch[2].trim(), style: quoteMatch[1] });
+            return;
+          }
+
+          const dividerMatch = block.match(/^\[\[divider:([a-zA-Z0-9-]+)\]\](.*)$/);
+          if (dividerMatch) {
+            activeAutoListGroup = "";
+            nodes.push({ type: "divider", text: (dividerMatch[2] || "").trim(), style: dividerMatch[1] });
+            return;
+          }
+
+          const listMatch = block.match(/^\[\[list:([a-zA-Z0-9-]+)\]\]\n?([\s\S]*?)\n?\[\[\/list\]\]$/);
+          if (listMatch) {
+            activeAutoListGroup = "";
+            listRunId += 1;
+            const listGroup = `list-${listRunId}`;
+            listMatch[2]
+              .split("\n")
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .forEach((line) => {
+                nodes.push({ type: "list", text: line.replace(/^(\d+)[.、]\s*/, ""), style: listMatch[1], group: listGroup });
+              });
+            return;
+          }
+
+          const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+
+          let localListGroup = "";
+          lines.forEach((line) => {
+            const match = line.match(/^(\d+)[.、]\s*(.+)$/);
+            if (match) {
+              if (!localListGroup) {
+                if (!activeAutoListGroup) {
+                  listRunId += 1;
+                  activeAutoListGroup = `list-${listRunId}`;
+                }
+                localListGroup = activeAutoListGroup;
+              }
+              nodes.push({ type: "list", text: match[2], group: localListGroup });
+            } else {
+              localListGroup = "";
+              nodes.push({ type: "paragraph", text: line });
+            }
+          });
+        });
+
+        return { title, nodes };
+      }
+
+      function styleAttr(rules) {
+        return Object.entries(rules)
+          .filter(([, value]) => value !== undefined && value !== null && value !== "")
+          .map(([key, value]) => `${key}:${value}`)
+          .join(";");
+      }
+
+      function getTitleColor(style) {
+        return state.titleColor || style.titleColor;
+      }
+
+      function getBodyFont() {
+        return bodyFonts[state.bodyFont] || bodyFonts.sans;
+      }
+
+      function previewMarkup(type, style) {
+        const accent = style.accent;
+        const bg = style.leadBg;
+        const muted = "rgba(23,32,27,0.22)";
+        const line = `<span class="mini-preview-line" style="display:block;width:78%;background:${muted};"></span>`;
+        const shortLine = `<span class="mini-preview-line" style="display:block;width:48%;background:${muted};"></span>`;
+
+        const samples = {
+          "title-standard": `<div style="font-weight:800;color:#17201b;font-size:14px;line-height:1.25;">文章主标题</div>${line}`,
+          "title-center": `<div style="text-align:center;font-weight:800;color:#17201b;font-size:14px;">文章主标题</div><div style="width:34px;height:2px;background:${accent};margin:8px auto 0;border-radius:99px;"></div>`,
+          "title-underline": `<div style="font-weight:800;color:#17201b;font-size:14px;padding-bottom:7px;border-bottom:1px solid ${accent};">文章主标题</div>`,
+          "title-framed": `<div style="padding:9px;border-radius:6px;background:${bg};border:1px solid rgba(23,32,27,0.08);font-weight:800;">框题标题</div>`,
+          "title-badge": `<span style="display:inline-block;background:${accent};color:#fff;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;">原创</span><div style="font-weight:800;margin-top:5px;">栏目标题</div>`,
+          "title-magazine": `<div style="height:1px;background:${accent};opacity:.55;"></div><div style="text-align:center;font-weight:800;margin:7px 0;">杂志标题</div><div style="height:1px;background:${accent};opacity:.55;"></div>`,
+          "section-numbered": `<div style="display:flex;gap:7px;align-items:center;"><span style="background:${accent};color:#fff;border-radius:5px;padding:3px 6px;font-weight:800;font-size:11px;">01</span><b>小标题</b></div>`,
+          "section-dot": `<div style="display:flex;gap:7px;align-items:center;"><span style="width:8px;height:8px;background:${accent};border-radius:50%;"></span><b>小标题</b></div>`,
+          "section-bracket": `<b><span style="color:${accent};">[</span> 小标题 <span style="color:${accent};">]</span></b>`,
+          "section-underline": `<b style="color:${accent};padding-bottom:5px;border-bottom:1px solid #dce3df;">小标题</b>`,
+          "section-capsule": `<span style="display:inline-block;background:${accent};color:#fff;border-radius:999px;padding:4px 10px;font-weight:800;">小标题</span>`,
+          "section-ribbon": `<span style="display:inline-block;background:${bg};color:${accent};border-radius:5px;padding:5px 9px;font-weight:800;">小标题</span>`,
+          "section-quote-frame": `<div style="border:1px solid #9a9f9c;text-align:center;padding:7px;font-weight:900;">“观点标题”</div>`,
+          "section-frame-soft": `<div style="border-top:1px solid #9a9f9c;border-bottom:1px solid #9a9f9c;text-align:center;padding:7px 0;font-weight:900;">观点标题</div>`,
+          "section-redbar-compact": `<div style="display:flex;gap:7px;align-items:center;font-weight:900;"><span style="width:5px;height:24px;background:${accent};"></span><span>短竖条标题</span></div>`,
+          "section-slash-main": `<div style="display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:start;text-align:left;"><b style="color:${accent};font-size:18px;line-height:1.15;">/</b><span><b style="display:block;color:${accent};font-size:16px;line-height:1.2;">主题标题</b><span style="display:block;margin-top:5px;color:#787f7a;font-weight:800;">副标题</span></span></div>`,
+          "section-slash-simple": `<b style="color:${accent};font-size:16px;">/ 栏目标题 <span style="color:#787f7a;font-size:12px;">说明</span></b>`,
+          "section-center-number": `<div style="text-align:center;color:${accent};"><b style="display:block;font-family:Georgia,serif;font-size:17px;">02.</b><strong>章节标题</strong></div>`,
+          "section-left-number": `<div style="display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center;color:${accent};"><b style="font-family:'Arial Black','Avenir Next Condensed','DIN Condensed',Impact,sans-serif;font-size:20px;line-height:1;font-weight:900;font-style:italic;">03.</b><strong style="font-size:14px;line-height:1.3;">章节标题</strong></div>`,
+          "lead-quote": `<div style="display:grid;grid-template-columns:18px 1fr;gap:5px;background:${bg};border-radius:6px;padding:7px;"><b style="color:${accent};font-size:22px;">“</b>${line}</div>`,
+          "lead-soft": `<div style="background:${bg};border-radius:6px;padding:8px;">${line}${shortLine}</div>`,
+          "lead-outline": `<div style="border:1px solid ${accent};border-radius:6px;padding:8px;">${line}${shortLine}</div>`,
+          "lead-plain": `<div style="border-top:1px solid ${accent};border-bottom:1px solid ${accent};padding:8px 0;">${line}${shortLine}</div>`,
+          "lead-line-quote": `<div style="border-left:4px solid ${accent}66;padding:2px 0 2px 10px;">${line}${shortLine}</div>`,
+          "lead-summary": `<div style="background:${bg};border-radius:6px;padding:7px;"><b style="color:${accent};font-size:11px;">本文要点</b><div style="margin-top:5px;">${line}</div></div>`,
+          "lead-center": `<div style="text-align:center;color:${accent};font-weight:800;padding:8px 2px;">一句金句</div>`,
+          "emphasis-strong": `这是一段 <b style="color:${accent};">重点</b> 文案`,
+          "emphasis-marker": `这是一段 <span style="background:${bg};font-weight:800;padding:0 3px;border-radius:3px;">重点</span> 文案`,
+          "emphasis-underline": `这是一段 <span style="color:inherit;font-weight:800;border-bottom:3px solid ${accent};padding-bottom:1px;">重点</span> 文案`,
+          "emphasis-tag": `这是一段 <span style="background:${bg};color:${accent};font-weight:800;border-radius:999px;padding:1px 7px;">重点</span>`,
+          "emphasis-box": `<span style="border:1px solid ${accent};color:${accent};font-weight:800;border-radius:5px;padding:3px 7px;">重点文字</span>`,
+          "emphasis-wave": `这是一段 <span style="color:${accent};font-weight:800;border-bottom:2px dotted ${accent};">重点</span>`,
+          "list-check": `<div style="display:grid;gap:5px;"><span>✓ 第一项</span><span>✓ 第二项</span></div>`,
+          "list-step": `<div style="display:grid;gap:5px;"><span><b style="color:${accent};">01</b> 第一项</span><span><b style="color:${accent};">02</b> 第二项</span></div>`,
+          "list-card": `<div style="background:${bg};border-radius:6px;padding:7px;margin-bottom:5px;">第一项</div><div style="background:${bg};border-radius:6px;padding:7px;">第二项</div>`,
+          "list-timeline": `<div style="display:grid;gap:0;"><div style="display:grid;grid-template-columns:20px 1fr;gap:7px;align-items:center;"><span style="height:22px;position:relative;display:flex;align-items:center;justify-content:center;"><i style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#dce3df;transform:translateX(-50%);"></i><b style="position:relative;width:8px;height:8px;border-radius:50%;background:${accent};display:block;"></b></span><b>第一项</b></div><div style="display:grid;grid-template-columns:20px 1fr;gap:7px;align-items:center;"><span style="height:22px;position:relative;display:flex;align-items:center;justify-content:center;"><i style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:#dce3df;transform:translateX(-50%);"></i><b style="position:relative;width:8px;height:8px;border-radius:50%;background:${accent};display:block;"></b></span><b>第二项</b></div></div>`,
+          "list-bullet": `<div style="display:grid;gap:5px;"><span style="color:${accent};">• <b style="color:#17201b;">第一项</b></span><span style="color:${accent};">• <b style="color:#17201b;">第二项</b></span></div>`,
+          "list-plain": `<div style="display:grid;gap:5px;"><span>1. 第一项</span><span>2. 第二项</span></div>`,
+          "divider-hairline": `<div style="height:1px;background:#dce3df;margin-top:18px;"></div>`,
+          "divider-short": `<div style="width:60px;height:2px;background:${accent};border-radius:99px;margin:18px auto 0;"></div>`,
+          "divider-dots": `<div style="text-align:center;color:${accent};letter-spacing:6px;font-size:18px;">•••</div>`,
+          "divider-label": `<div style="display:flex;align-items:center;gap:8px;color:${accent};"><span style="height:1px;background:#dce3df;flex:1;"></span><span style="display:inline-flex;gap:5px;align-items:center;"><i style="width:5px;height:5px;border-radius:50%;background:${accent};display:block;"></i><i style="width:5px;height:5px;border-radius:50%;background:${accent};display:block;"></i></span><span style="height:1px;background:#dce3df;flex:1;"></span></div>`,
+          "divider-double": `<div style="display:grid;gap:4px;margin-top:14px;"><span style="height:1px;background:${accent};opacity:.7;"></span><span style="height:1px;background:#dce3df;"></span></div>`,
+          "divider-wave": `<div style="text-align:center;color:${accent};font-size:16px;letter-spacing:3px;">· · · · ·</div>`
+        };
+
+        return samples[type] || line;
+      }
+
+      function renderComponentPickers() {
+        const style = styles[state.style];
+        componentPickers.forEach((picker) => {
+          const host = els[picker.hostKey];
+          if (!host) return;
+          host.innerHTML = picker.options.map((option) => `
+            <button class="visual-card ${state[picker.stateKey] === option.value ? "is-active" : ""}" type="button" data-component-picker="${picker.stateKey}" data-value="${option.value}" style="--option-accent:${style.accent};--option-bg:${style.leadBg};">
+              <div class="mini-preview">${previewMarkup(option.preview, style)}</div>
+              <strong>${option.label}<span class="visual-card-note">${option.note}</span></strong>
+            </button>
+          `).join("");
+        });
+      }
+
+      function renderEmphasis(text, style, emphasisStyle = state.emphasisStyle) {
+        const safeText = escapeHtml(text);
+        const base = {
+          color: style.accent,
+          "font-weight": "800"
+        };
+
+        if (emphasisStyle === "marker") {
+          return `<span style="${styleAttr({ color: "#17201b", "font-weight": "800", background: style.leadBg, padding: "0 3px", "border-radius": "3px" })}">${safeText}</span>`;
+        }
+
+        if (emphasisStyle === "underline") {
+          return `<span style="${styleAttr({ color: "inherit", "font-weight": "800", "border-bottom": `3px solid ${style.accent}`, "padding-bottom": "1px" })}">${safeText}</span>`;
+        }
+
+        if (emphasisStyle === "tag") {
+          return `<span style="${styleAttr({ display: "inline-block", color: style.accent, background: style.leadBg, "border-radius": "999px", padding: "0 7px", "font-size": "0.92em", "font-weight": "800", "line-height": "1.65" })}">${safeText}</span>`;
+        }
+
+        if (emphasisStyle === "box") {
+          return `<span style="${styleAttr({ display: "inline-block", color: style.accent, background: "#fff", border: `1px solid ${style.accent}`, "border-radius": "5px", padding: "0 6px", "font-size": "0.94em", "font-weight": "800", "line-height": "1.65" })}">${safeText}</span>`;
+        }
+
+        if (emphasisStyle === "wave") {
+          return `<span style="${styleAttr({ color: style.accent, "font-weight": "800", "border-bottom": `2px dotted ${style.accent}`, "padding-bottom": "1px" })}">${safeText}</span>`;
+        }
+
+        return `<strong style="${styleAttr(base)}">${safeText}</strong>`;
+      }
+
+      function renderInline(text, style) {
+        return text
+          .split(/(\[\[em:[a-zA-Z0-9-]+\]\][\s\S]*?\[\[\/em\]\]|\*\*[^*]+\*\*)/g)
+          .filter((part) => part !== "")
+          .map((part) => {
+            const markerMatch = part.match(/^\[\[em:([a-zA-Z0-9-]+)\]\]([\s\S]*?)\[\[\/em\]\]$/);
+            if (markerMatch) {
+              return renderEmphasis(markerMatch[2], style, markerMatch[1]);
+            }
+            if (part.startsWith("**") && part.endsWith("**")) {
+              return renderEmphasis(part.slice(2, -2), style);
+            }
+            return escapeHtml(part);
+          })
+          .join("");
+      }
+
+      function renderTitle(title, style) {
+        const titleColor = getTitleColor(style);
+        const base = {
+          margin: "0 0 14px",
+          color: titleColor,
+          "font-size": `${state.titleSize}px`,
+          "line-height": "1.34",
+          "letter-spacing": "0",
+          "font-weight": "800",
+          "text-wrap": "balance"
+        };
+
+        if (state.titleLayout === "center") {
+          return `<h2 style="${styleAttr({ ...base, "text-align": "center", margin: "0 0 12px" })}">${escapeHtml(title)}</h2>`;
+        }
+
+        if (state.titleLayout === "underline") {
+          return `<h2 style="${styleAttr({ ...base, "padding-bottom": "12px", "border-bottom": `1px solid ${style.accent}`, margin: "0 0 16px" })}">${escapeHtml(title)}</h2>`;
+        }
+
+        if (state.titleLayout === "framed") {
+          const frameStyle = styleAttr({
+            margin: "0 0 16px",
+            padding: "16px 16px 15px",
+            "border-radius": "8px",
+            background: style.leadBg,
+            border: `1px solid ${style.iconBg}`
+          });
+          return `<section style="${frameStyle}"><h2 style="${styleAttr({ ...base, margin: "0" })}">${escapeHtml(title)}</h2></section>`;
+        }
+
+        if (state.titleLayout === "badge") {
+          return `<section style="${styleAttr({ margin: "0 0 16px" })}"><span style="${styleAttr({ display: "inline-flex", "align-items": "center", background: style.accent, color: "#fff", "border-radius": "999px", padding: "3px 9px", "font-size": "12px", "font-weight": "800", "margin-bottom": "10px" })}">原创精选</span><h2 style="${styleAttr({ ...base, margin: "0" })}">${escapeHtml(title)}</h2></section>`;
+        }
+
+        if (state.titleLayout === "magazine") {
+          return `<section style="${styleAttr({ margin: "0 0 18px" })}"><div style="${styleAttr({ height: "1px", background: style.accent, opacity: "0.55", margin: "0 0 14px" })}"></div><h2 style="${styleAttr({ ...base, margin: "0", "text-align": "center" })}">${escapeHtml(title)}</h2><div style="${styleAttr({ height: "1px", background: style.accent, opacity: "0.55", margin: "14px 0 0" })}"></div></section>`;
+        }
+
+        return `<h2 style="${styleAttr(base)}">${escapeHtml(title)}</h2>`;
+      }
+
+      function renderMeta(author, date, reads) {
+        const justify = state.titleLayout === "center" ? "center" : "flex-start";
+        return `<div class="article-meta" style="${styleAttr({ display: "flex", "flex-wrap": "wrap", gap: "8px", "align-items": "center", "justify-content": justify, color: "#8a8f8d", "font-size": "13px", "line-height": "1.6", "margin-bottom": "18px" })}"><span style="${styleAttr({ display: "inline-flex", "align-items": "center", padding: "1px 6px", "border-radius": "5px", background: "#f1f2f1", color: "#7b817e", "font-size": "12px" })}">原创</span><span>${escapeHtml(author)}</span><span>${date}</span><span>${reads}人读过</span></div>`;
+      }
+
+      function renderLead(text, style, leadStyle = state.leadStyle) {
+        const safeText = renderInline(text, style);
+        const bodyFont = getBodyFont();
+        const paragraph = styleAttr({
+          margin: "0",
+          color: "#26332d",
+          "font-size": "15px",
+          "line-height": "1.78",
+          "font-family": bodyFont,
+          "text-align": "left"
+        });
+
+        if (leadStyle === "soft") {
+          return `<section style="${styleAttr({ margin: "18px 0 22px", padding: "16px 18px", "border-radius": "8px", background: style.leadBg, border: "1px solid rgba(23,32,27,0.06)" })}"><p style="${paragraph}">${safeText}</p></section>`;
+        }
+
+        if (leadStyle === "outline") {
+          return `<section style="${styleAttr({ margin: "18px 0 22px", padding: "16px 18px", "border-radius": "8px", background: "#fff", border: `1px solid ${style.accent}` })}"><p style="${paragraph}">${safeText}</p></section>`;
+        }
+
+        if (leadStyle === "plain") {
+          return `<blockquote style="${styleAttr({ margin: "18px 0 22px", padding: "13px 0", "border-top": `1px solid ${style.accent}`, "border-bottom": `1px solid ${style.accent}` })}"><p style="${styleAttr({ margin: "0", color: "#313b36", "font-size": "15px", "line-height": "1.82", "text-align": "left", "font-style": "italic" })}">${safeText}</p></blockquote>`;
+        }
+
+        if (leadStyle === "lineQuote") {
+          return `<blockquote style="${styleAttr({ margin: "18px 0 24px", padding: "2px 0 2px 18px", "border-left": `4px solid ${style.accent}66`, background: "transparent" })}"><p style="${styleAttr({ margin: "0", color: "#555f59", "font-size": "15px", "line-height": "1.9", "text-align": "justify", "font-weight": "650" })}">${safeText}</p></blockquote>`;
+        }
+
+        if (leadStyle === "summary") {
+          return `<section style="${styleAttr({ margin: "18px 0 22px", padding: "16px 18px", "border-radius": "8px", background: style.leadBg, border: "1px solid rgba(23,32,27,0.06)" })}"><strong style="${styleAttr({ display: "block", color: style.accent, "font-size": "14px", "margin-bottom": "8px" })}">本文要点</strong><p style="${paragraph}">${safeText}</p></section>`;
+        }
+
+        if (leadStyle === "center") {
+          return `<section style="${styleAttr({ margin: "20px 0 24px", padding: "15px 8px", "text-align": "center", color: style.accent })}"><p style="${styleAttr({ margin: "0", color: style.accent, "font-size": "17px", "line-height": "1.8", "font-weight": "800", "text-align": "center" })}">${safeText}</p></section>`;
+        }
+
+        return `<section style="${styleAttr({ margin: "18px 0 22px", padding: "17px 18px", "border-radius": "8px", background: `linear-gradient(135deg, ${style.leadBg}, #fff)`, color: "#2a3832" })}"><div style="${styleAttr({ display: "grid", "grid-template-columns": "24px 1fr", gap: "8px", "align-items": "start" })}"><span style="${styleAttr({ color: style.accent, "font-family": "Georgia, serif", "font-size": "34px", "line-height": "1" })}">“</span><p style="${paragraph}">${safeText}</p></div></section>`;
+      }
+
+      function renderSectionTitle(text, index, style, sectionStyle = state.sectionStyle) {
+        const safeText = escapeHtml(text);
+        const titleBase = {
+          margin: "26px 0 14px",
+          color: "#161d19",
+          "font-size": "18px",
+          "font-weight": "800",
+          "line-height": "1.45",
+          "letter-spacing": "0"
+        };
+
+        if (sectionStyle === "underline") {
+          return `<h3 style="${styleAttr({ ...titleBase, "padding-bottom": "8px", "border-bottom": "1px solid #e3e8e5" })}"><span style="${styleAttr({ color: style.accent })}">${safeText}</span></h3>`;
+        }
+
+        if (sectionStyle === "capsule") {
+          return `<h3 style="${styleAttr({ ...titleBase, margin: "27px 0 15px" })}"><span style="${styleAttr({ display: "inline-flex", "align-items": "center", color: "#fff", background: style.accent, "border-radius": "999px", padding: "5px 13px", "font-size": "16px" })}">${safeText}</span></h3>`;
+        }
+
+        if (sectionStyle === "ribbon") {
+          return `<h3 style="${styleAttr({ ...titleBase, margin: "27px 0 15px" })}"><span style="${styleAttr({ display: "inline-block", color: style.accent, background: style.leadBg, "border-radius": "7px", padding: "7px 12px", "font-size": "17px" })}">${safeText}</span></h3>`;
+        }
+
+        if (sectionStyle === "quoteFrame") {
+          return `<section style="${styleAttr({ margin: "28px 0 18px" })}"><h3 style="${styleAttr({ ...titleBase, margin: "0", padding: "14px 18px", border: "1px solid #9a9f9c", "text-align": "center", color: "#333836", "font-size": "19px", "font-weight": "900", "line-height": "1.35" })}">“${safeText}”</h3><div style="${styleAttr({ height: "1px", background: "#9a9f9c", margin: "6px 0 0" })}"></div></section>`;
+        }
+
+        if (sectionStyle === "frameSoft") {
+          return `<h3 style="${styleAttr({ ...titleBase, margin: "28px 0 18px", padding: "12px 8px", "border-top": "1px solid #9a9f9c", "border-bottom": "1px solid #9a9f9c", "text-align": "center", color: "#343a37", "font-size": "18px", "font-weight": "900" })}">“${safeText}”</h3>`;
+        }
+
+        if (sectionStyle === "redbarCompact") {
+          return `<h3 style="${styleAttr({ ...titleBase, display: "flex", "align-items": "center", gap: "11px", margin: "28px 0 16px", color: "#333836", "font-size": "18px", "font-weight": "900" })}"><span style="${styleAttr({ width: "6px", height: "24px", background: style.accent, display: "inline-block", "flex": "0 0 auto" })}"></span><span>${safeText}</span></h3>`;
+        }
+
+        if (sectionStyle === "slashMain") {
+          return `<section style="${styleAttr({ display: "grid", "grid-template-columns": "auto 1fr", gap: "9px", "align-items": "start", margin: "28px 0 16px", padding: "2px 0 0", "text-align": "left" })}"><span style="${styleAttr({ color: style.accent, "font-size": "24px", "font-weight": "900", "line-height": "1.18" })}">/</span><span><h3 style="${styleAttr({ ...titleBase, margin: "0", color: style.accent, "font-size": "21px", "font-weight": "900", "line-height": "1.38", "text-align": "left" })}">${safeText}</h3><p style="${styleAttr({ margin: "6px 0 0", color: "#787f7a", "font-size": "15px", "font-weight": "850", "line-height": "1.5", "text-align": "left" })}">主题章节</p></span></section>`;
+        }
+
+        if (sectionStyle === "slashSimple") {
+          return `<h3 style="${styleAttr({ ...titleBase, margin: "28px 0 16px", color: style.accent, "font-size": "20px", "font-weight": "900" })}">/ ${safeText}<span style="${styleAttr({ color: "#787f7a", "font-size": "14px", "font-weight": "800", "margin-left": "8px" })}">栏目</span></h3>`;
+        }
+
+        if (sectionStyle === "centerNumber") {
+          return `<h3 style="${styleAttr({ ...titleBase, margin: "30px 0 18px", "text-align": "center", color: style.accent })}"><span style="${styleAttr({ display: "block", "font-family": "Georgia, serif", "font-size": "19px", "font-weight": "800", "line-height": "1", "margin-bottom": "14px" })}">${String(index).padStart(2, "0")}.</span><span style="${styleAttr({ "font-size": "18px", "font-weight": "900", "line-height": "1.45" })}">${safeText}</span></h3>`;
+        }
+
+        if (sectionStyle === "leftNumber") {
+          return `<h3 style="${styleAttr({ ...titleBase, display: "grid", "grid-template-columns": "auto 1fr", gap: "10px", "align-items": "center", margin: "28px 0 16px", color: style.accent, "text-align": "left" })}"><span style="${styleAttr({ "font-family": "'Arial Black','Avenir Next Condensed','DIN Condensed',Impact,sans-serif", "font-size": "25px", "font-weight": "900", "font-style": "italic", "line-height": "1", "letter-spacing": "0" })}">${String(index).padStart(2, "0")}.</span><span style="${styleAttr({ "font-size": "18px", "font-weight": "900", "line-height": "1.45", color: style.accent })}">${safeText}</span></h3>`;
+        }
+
+        const num = String(index).padStart(2, "0");
+        return `<h3 style="${styleAttr({ ...titleBase, display: "flex", "align-items": "center", gap: "10px" })}"><span style="${styleAttr({ width: "36px", height: "32px", "border-radius": "7px", display: "inline-flex", "align-items": "center", "justify-content": "center", color: "#fff", background: style.accent, "font-size": "16px", "font-weight": "800", "flex-shrink": "0" })}">${num}</span><span>${safeText}</span></h3>`;
+      }
+
+      function renderDivider(style, label = "继续阅读", dividerStyle = state.dividerStyle) {
+        if (dividerStyle === "short") {
+          return `<section style="${styleAttr({ margin: "28px 0 22px", "text-align": "center", "font-size": "0", "line-height": "0" })}"><span style="${styleAttr({ display: "inline-block", width: "72px", "border-top": `2px solid ${style.accent}`, opacity: "0.82", "line-height": "0", "font-size": "0" })}">&nbsp;</span></section>`;
+        }
+
+        if (dividerStyle === "dots") {
+          return `<div style="${styleAttr({ margin: "28px 0 22px", "text-align": "center", color: style.accent, "font-size": "18px", "letter-spacing": "8px", "line-height": "1" })}">•••</div>`;
+        }
+
+        if (dividerStyle === "label") {
+          return `<section style="${styleAttr({ display: "flex", "align-items": "center", gap: "12px", margin: "28px 0 22px", color: style.accent })}"><span style="${styleAttr({ display: "block", "border-top": "1px solid #e1e7e3", flex: "1", "font-size": "0", "line-height": "0" })}">&nbsp;</span><span style="${styleAttr({ display: "inline-block", "font-size": "16px", "line-height": "1", "letter-spacing": "4px", "flex-shrink": "0" })}">••</span><span style="${styleAttr({ display: "block", "border-top": "1px solid #e1e7e3", flex: "1", "font-size": "0", "line-height": "0" })}">&nbsp;</span></section>`;
+        }
+
+        if (dividerStyle === "double") {
+          return `<section style="${styleAttr({ display: "grid", gap: "5px", margin: "28px 0 22px", "font-size": "0", "line-height": "0" })}"><span style="${styleAttr({ display: "block", "border-top": `1px solid ${style.accent}`, opacity: "0.65", "font-size": "0", "line-height": "0" })}">&nbsp;</span><span style="${styleAttr({ display: "block", "border-top": "1px solid #e1e7e3", "font-size": "0", "line-height": "0" })}">&nbsp;</span></section>`;
+        }
+
+        if (dividerStyle === "wave") {
+          return `<div style="${styleAttr({ margin: "28px 0 22px", "text-align": "center", color: style.accent, "font-size": "17px", "letter-spacing": "4px", "line-height": "1" })}">· · · · ·</div>`;
+        }
+
+        return `<section style="${styleAttr({ margin: "28px 0 22px", "font-size": "0", "line-height": "0" })}"><span style="${styleAttr({ display: "block", "border-top": "1px solid #e1e7e3", "font-size": "0", "line-height": "0" })}">&nbsp;</span></section>`;
+      }
+
+      function renderListStart(listStyle = state.listStyle) {
+        const base = { display: "grid", gap: "13px", margin: "16px 0" };
+
+        if (listStyle === "timeline") {
+          return `<div style="${styleAttr({ ...base, gap: "0" })}">`;
+        }
+
+        return `<div style="${styleAttr(base)}">`;
+      }
+
+      function renderListItem(text, index, style, fontSize, listStyle = state.listStyle) {
+        const content = renderInline(text, style);
+        const bodyFont = getBodyFont();
+        const paragraph = {
+          margin: "0",
+          color: "#232826",
+          "font-size": `${fontSize}px`,
+          "line-height": style.bodyLine,
+          "font-family": bodyFont
+        };
+
+        if (listStyle === "step") {
+          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "38px 1fr", gap: "10px", "align-items": "start" })}"><span style="${styleAttr({ display: "inline-flex", "align-items": "center", "justify-content": "center", width: "34px", height: "28px", "border-radius": "7px", background: style.accent, color: "#fff", "font-size": "13px", "font-weight": "800" })}">${String(index).padStart(2, "0")}</span><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+        }
+
+        if (listStyle === "card") {
+          return `<div style="${styleAttr({ padding: "13px 14px", "border-radius": "8px", background: style.leadBg, border: "1px solid rgba(23,32,27,0.06)" })}"><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+        }
+
+        if (listStyle === "timeline") {
+          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "22px 1fr", gap: "10px", "align-items": "stretch" })}"><span style="${styleAttr({ position: "relative", display: "flex", "justify-content": "center", "align-items": "flex-start", "padding-top": "10px" })}"><i style="${styleAttr({ position: "absolute", top: "0", bottom: "0", left: "50%", width: "1px", background: "#dce3df", transform: "translateX(-50%)" })}"></i><i style="${styleAttr({ position: "relative", display: "block", width: "9px", height: "9px", "border-radius": "50%", background: style.accent })}"></i></span><p style="${styleAttr({ ...paragraph, padding: "0 0 15px" })}">${content}</p></div>`;
+        }
+
+        if (listStyle === "bullet") {
+          return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "18px 1fr", gap: "9px", "align-items": "start" })}"><span style="${styleAttr({ width: "7px", height: "7px", "border-radius": "50%", background: style.accent, "margin-top": "10px", "justify-self": "center" })}"></span><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+        }
+
+        if (listStyle === "plain") {
+          return `<p style="${styleAttr({ ...paragraph, margin: "0" })}"><strong style="${styleAttr({ color: style.accent, "margin-right": "6px" })}">${index}.</strong>${content}</p>`;
+        }
+
+        return `<div style="${styleAttr({ display: "grid", "grid-template-columns": "22px 1fr", gap: "10px", "align-items": "start" })}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="${styleAttr({ width: "20px", height: "20px", color: style.accent, "margin-top": "3px" })}"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.8"/><path d="m8.5 12 2.3 2.4 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><p style="${styleAttr(paragraph)}">${content}</p></div>`;
+      }
+
+      function buildArticle(parsed) {
+        const style = styles[state.style];
+        const words = countChineseWords(els.draft.value);
+        const fontSize = Number(els.font.value || style.bodySize);
+        const bodyFont = getBodyFont();
+        const metaDate = new Intl.DateTimeFormat("zh-CN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date());
+
+        let sectionIndex = 0;
+        let listOpen = false;
+        let listIndex = 0;
+        let currentListStyle = state.listStyle;
+        let currentListGroup = "";
+        const listCounters = {};
+        const parts = [];
+        const markdown = [`# ${parsed.title}`, ""];
+
+        function closeList() {
+          if (listOpen) {
+            parts.push("</div>");
+            listOpen = false;
+          }
+        }
+
+        parts.push(renderTitle(parsed.title, style));
+
+        const firstParagraph = parsed.nodes.find((node) => node.type === "paragraph");
+        if (state.showLead && firstParagraph) {
+          parts.push(renderLead(firstParagraph.text, style));
+        }
+
+        parsed.nodes.forEach((node) => {
+          if (node.type !== "list") closeList();
+
+          if (node.type === "heading") {
+            sectionIndex += 1;
+            if (state.showDividers) {
+              parts.push(renderDivider(style, sectionIndex === 1 ? "正文开始" : "继续阅读"));
+            }
+            parts.push(renderSectionTitle(node.text, sectionIndex, style, node.style || state.sectionStyle));
+            markdown.push(`## ${node.text}`, "");
+          }
+
+          if (node.type === "quote") {
+            parts.push(renderLead(node.text, style, node.style || state.leadStyle));
+            markdown.push(`> ${node.text}`, "");
+          }
+
+          if (node.type === "divider") {
+            parts.push(renderDivider(style, node.text || "继续阅读", node.style || state.dividerStyle));
+          }
+
+          if (node.type === "paragraph") {
+            parts.push(`<p style="${styleAttr({ margin: "14px 0", color: "#232826", "font-size": `${fontSize}px`, "line-height": style.bodyLine, "font-family": bodyFont, "text-align": "justify" })}">${renderInline(node.text, style)}</p>`);
+            markdown.push(node.text, "");
+          }
+
+          if (node.type === "list") {
+            const nodeListStyle = node.style || state.listStyle;
+            const nodeListGroup = node.group || "default";
+            const listKey = `${nodeListStyle}:${nodeListGroup}`;
+            if (!listOpen || currentListStyle !== nodeListStyle || currentListGroup !== nodeListGroup) {
+              closeList();
+              parts.push(renderListStart(nodeListStyle));
+              listOpen = true;
+              listIndex = listCounters[listKey] || 0;
+              currentListStyle = nodeListStyle;
+              currentListGroup = nodeListGroup;
+            }
+            listIndex += 1;
+            listCounters[listKey] = listIndex;
+            parts.push(renderListItem(node.text, listIndex, style, fontSize, nodeListStyle));
+            markdown.push(`- ${node.text}`);
+          }
+        });
+        closeList();
+
+        if (state.showCopyright) {
+          parts.push(`<p style="margin-top:28px;color:#777;font-size:13px;">版权说明：转载请联系作者授权，感谢尊重原创内容。</p>`);
+          markdown.push("", "版权说明：转载请联系作者授权，感谢尊重原创内容。");
+        }
+
+        const html = `<section style="--accent:${style.accent};--lead-bg:${style.leadBg};--title-color:${getTitleColor(style)};--body-size:${fontSize}px;--body-line:${style.bodyLine};--body-font:${bodyFont};font-family:${bodyFont};color:#232826;">${parts.join("")}</section>`;
+        const plainText = [parsed.title, "", ...parsed.nodes.map((node) => stripInlineSyntax(node.text)), state.showCopyright ? "版权说明：转载请联系作者授权，感谢尊重原创内容。" : ""].filter(Boolean).join("\n");
+
+        return { html, plainText, markdown: markdown.join("\n"), sectionCount: sectionIndex };
+      }
+
+      function renderStyleFilters() {
+        els.styleFilters.innerHTML = styleGroups.map((group) => `
+          <button class="style-filter ${group.key === state.styleGroup ? "is-active" : ""}" type="button" data-style-group="${group.key}">
+            ${group.name}
+          </button>
+        `).join("");
+      }
+
+      function renderStyles() {
+        const visibleStyles = Object.entries(styles).filter(([, item]) => state.styleGroup === "all" || item.group === state.styleGroup);
+        els.styleCount.textContent = `${visibleStyles.length} / ${Object.keys(styles).length} 个风格`;
+        els.styleList.innerHTML = visibleStyles.map(([key, item]) => `
+          <button class="style-option ${key === state.style ? "is-active" : ""}" type="button" data-style="${key}" style="--option-accent:${item.accent};--option-bg:${item.iconBg};">
+            <span class="style-icon" style="background:${item.iconBg};color:${item.iconColor};">${icons[item.icon]}</span>
+            <span class="style-copy">
+              <strong>${item.name}</strong>
+              <span>${item.desc}</span>
+              <span class="style-palette" aria-hidden="true">
+                <i class="style-swatch" style="background:${item.accent};"></i>
+                <i class="style-swatch" style="background:${item.leadBg};"></i>
+                <i class="style-swatch" style="background:${item.titleColor};"></i>
+              </span>
+            </span>
+            <span class="check">✓</span>
+          </button>
+        `).join("");
+      }
+
+      function syncControlsFromState() {
+        els.font.value = String(styles[state.style].bodySize);
+        els.bodyFont.value = state.bodyFont;
+        els.titleLayout.value = state.titleLayout;
+        els.sectionStyle.value = state.sectionStyle;
+        els.titleSize.value = String(state.titleSize);
+        els.leadStyle.value = state.leadStyle;
+        els.emphasisStyle.value = state.emphasisStyle;
+        els.listStyle.value = state.listStyle;
+        els.dividerStyle.value = state.dividerStyle;
+        setSwitch(els.dividerToggle, state.showDividers);
+        setSwitch(els.copyrightToggle, state.showCopyright);
+      }
+
+      function setComponentSelection(stateKey, value) {
+        const picker = componentPickers.find((item) => item.stateKey === stateKey);
+        if (!picker) return;
+        state[stateKey] = value;
+        if (els[picker.selectKey]) {
+          els[picker.selectKey].value = value;
+        }
+        renderComponentPickers();
+        update();
+      }
+
+      function restoreDraftScroll(scrollTop, scrollLeft) {
+        els.draft.scrollTop = scrollTop;
+        els.draft.scrollLeft = scrollLeft;
+        const restoreLater = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+        restoreLater(() => {
+          els.draft.scrollTop = scrollTop;
+          els.draft.scrollLeft = scrollLeft;
+        });
+      }
+
+      function previewAnchorFromText(text) {
+        const lines = stripInlineSyntax(String(text || ""))
+          .split(/\n+/)
+          .map((line) => line.trim().replace(/^(\d+)[.、]\s*/, "").replace(/[：:]$/, ""))
+          .filter(Boolean);
+        return lines[0] || "";
+      }
+
+      function normalizePreviewAnchor(text) {
+        return String(text || "").replace(/\s+/g, "");
+      }
+
+      function countPreviewAnchorOccurrences(text, anchorText) {
+        const anchor = normalizePreviewAnchor(anchorText).slice(0, 32);
+        if (!anchor) return 0;
+        const haystack = normalizePreviewAnchor(stripInlineSyntax(String(text || "")));
+        let count = 0;
+        let index = haystack.indexOf(anchor);
+        while (index !== -1) {
+          count += 1;
+          index = haystack.indexOf(anchor, index + anchor.length);
+        }
+        return count;
+      }
+
+      function findPreviewAnchorElement(anchorText, occurrence = 0) {
+        const anchor = normalizePreviewAnchor(anchorText).slice(0, 32);
+        if (!anchor) return null;
+
+        const preferredSelectors = "h2,h3,p,blockquote,li";
+        const fallbackSelectors = "span,strong,section,div";
+        const findMatches = (selectors) => [...els.preview.querySelectorAll(selectors)]
+          .filter((element) => element !== els.preview && element !== els.preview.firstElementChild)
+          .filter((element) => normalizePreviewAnchor(element.textContent).includes(anchor));
+
+        const matches = findMatches(preferredSelectors);
+        const fallbackMatches = matches.length ? matches : findMatches(fallbackSelectors);
+        return fallbackMatches[Math.min(Math.max(0, occurrence), fallbackMatches.length - 1)] || null;
+      }
+
+      function scrollPreviewToAnchor(anchorText, occurrence = 0) {
+        const target = findPreviewAnchorElement(anchorText, occurrence);
+        if (!target || !els.previewZone) return;
+
+        const run = () => {
+          const zoneRect = els.previewZone.getBoundingClientRect();
+          const targetRect = target.getBoundingClientRect();
+          const top = Math.max(0, els.previewZone.scrollTop + targetRect.top - zoneRect.top - 28);
+          if (typeof els.previewZone.scrollTo === "function") {
+            els.previewZone.scrollTo({ top, behavior: "smooth" });
+          } else {
+            els.previewZone.scrollTop = top;
+          }
+        };
+        const schedule = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+        schedule(run);
+      }
+
+      function nearbyPreviewAnchor(before, after) {
+        const next = after.split(/\n+/).map(previewAnchorFromText).find(Boolean);
+        if (next) return next;
+        return before.split(/\n+/).reverse().map(previewAnchorFromText).find(Boolean) || "";
+      }
+
+      function replaceDraftSelection(replacement, start, end, previewAnchorText = "") {
+        const scrollTop = els.draft.scrollTop;
+        const scrollLeft = els.draft.scrollLeft;
+        const before = els.draft.value.slice(0, start);
+        const after = els.draft.value.slice(end);
+        els.draft.value = `${before}${replacement}${after}`;
+        const cursor = start + replacement.length;
+        try {
+          els.draft.focus({ preventScroll: true });
+        } catch (error) {
+          els.draft.focus();
+        }
+        els.draft.setSelectionRange(cursor, cursor);
+        update();
+        restoreDraftScroll(scrollTop, scrollLeft);
+        scrollPreviewToAnchor(previewAnchorText, countPreviewAnchorOccurrences(before, previewAnchorText));
+      }
+
+      function firstBodyInsertPosition(text) {
+        const match = text.match(/\n{2,}/);
+        return match ? match.index + match[0].length : text.length;
+      }
+
+      function insertDividerAtCursor(value) {
+        let start = els.draft.selectionStart;
+        let end = els.draft.selectionEnd;
+        const text = els.draft.value;
+
+        if (typeof start !== "number" || typeof end !== "number") {
+          start = firstBodyInsertPosition(text);
+          end = start;
+        }
+
+        if (start === 0 && end === 0 && text.trim()) {
+          start = firstBodyInsertPosition(text);
+          end = start;
+        }
+
+        const before = text.slice(0, start);
+        const after = text.slice(end);
+        const beforeGap = !before || before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+        const afterGap = !after || after.startsWith("\n\n") ? "" : after.startsWith("\n") ? "\n" : "\n\n";
+        const replacement = `${beforeGap}[[divider:${value}]]${afterGap}`;
+        const previewAnchor = nearbyPreviewAnchor(before, after);
+
+        state.dividerStyle = value;
+        els.dividerStyle.value = value;
+        replaceDraftSelection(replacement, start, end, previewAnchor);
+        toast("已插入分割线");
+        return true;
+      }
+
+      function applyComponentToSelection(stateKey, value) {
+        const start = els.draft.selectionStart;
+        const end = els.draft.selectionEnd;
+        if (stateKey === "dividerStyle" && (typeof start !== "number" || typeof end !== "number" || end <= start)) {
+          return insertDividerAtCursor(value);
+        }
+
+        if (typeof start !== "number" || typeof end !== "number" || end <= start) return false;
+
+        const selected = els.draft.value.slice(start, end);
+        const trimmed = selected.trim();
+        if (!trimmed) return false;
+
+        let replacement = "";
+
+        if (stateKey === "sectionStyle") {
+          replacement = `\n\n[[section:${value}]]${trimmed.replace(/\s+/g, " ")}\n\n`;
+        } else if (stateKey === "leadStyle") {
+          replacement = `\n\n[[quote:${value}]]${trimmed}\n\n`;
+        } else if (stateKey === "emphasisStyle") {
+          let emphasisStart = start;
+          let emphasisEnd = end;
+          let emphasisText = selected;
+          if (els.draft.value.slice(start - 2, start) === "**" && els.draft.value.slice(end, end + 2) === "**") {
+            emphasisStart = start - 2;
+            emphasisEnd = end + 2;
+          } else if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
+            emphasisText = trimmed.slice(2, -2);
+          }
+          replacement = `[[em:${value}]]${emphasisText}[[/em]]`;
+          replaceDraftSelection(replacement, emphasisStart, emphasisEnd, previewAnchorFromText(emphasisText));
+          toast("已应用到选中文本");
+          return true;
+        } else if (stateKey === "listStyle") {
+          state.listStyle = value;
+          els.listStyle.value = value;
+          const items = trimmed
+            .split("\n")
+            .map((line) => line.trim().replace(/^(\d+)[.、]\s*/, ""))
+            .filter(Boolean);
+          if (!items.length) return false;
+          replacement = `\n\n[[list:${value}]]\n${items.join("\n")}\n[[/list]]\n\n`;
+          replaceDraftSelection(replacement, start, end, items[0]);
+          toast("已应用到选中文本");
+          return true;
+        } else if (stateKey === "dividerStyle") {
+          state.dividerStyle = value;
+          els.dividerStyle.value = value;
+          replacement = `\n\n[[divider:${value}]]\n\n${trimmed}`;
+        } else {
+          return false;
+        }
+
+        replaceDraftSelection(replacement, start, end, previewAnchorFromText(trimmed));
+        toast("已应用到选中文本");
+        return true;
+      }
+
+      function update() {
+        const parsed = parseDraft(els.draft.value);
+        const output = buildArticle(parsed);
+        const words = countChineseWords(els.draft.value);
+        const paragraphs = parsed.nodes.filter((node) => node.type === "paragraph" || node.type === "list").length;
+        const style = styles[state.style];
+        const activeTitleColor = getTitleColor(style);
+
+        state.html = output.html;
+        state.text = output.plainText;
+        state.markdown = output.markdown;
+        els.preview.innerHTML = output.html;
+        els.preview.style.setProperty("--accent", style.accent);
+        els.preview.style.setProperty("--lead-bg", style.leadBg);
+        els.preview.style.setProperty("--title-color", activeTitleColor);
+        els.preview.style.setProperty("--body-size", `${Number(els.font.value || style.bodySize)}px`);
+        els.preview.style.setProperty("--body-line", style.bodyLine);
+        els.preview.style.setProperty("--body-font", getBodyFont());
+        els.titleColor.value = activeTitleColor;
+        els.titleColorValue.textContent = activeTitleColor.toUpperCase();
+        els.wordCount.textContent = `${words} 字`;
+        els.summaryStyle.textContent = style.name;
+        els.summaryWords.textContent = words;
+        els.summaryParagraphs.textContent = paragraphs;
+        els.summaryHeadings.textContent = output.sectionCount;
+        els.summaryRead.textContent = `${Math.max(1, Math.ceil(words / 450))} 分钟`;
+      }
+
+      async function copyValue(value, label, mimeType = "text/plain") {
+        const fallbackCopy = () => {
+          const temp = document.createElement("textarea");
+          temp.value = value;
+          temp.setAttribute("readonly", "");
+          temp.style.position = "fixed";
+          temp.style.left = "-9999px";
+          temp.style.top = "0";
+          document.body.appendChild(temp);
+          temp.select();
+          const ok = document.execCommand("copy");
+          temp.remove();
+          return ok;
+        };
+
+        try {
+          if (mimeType === "text/html" && navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "text/html": new Blob([value], { type: "text/html" }),
+                "text/plain": new Blob([state.text], { type: "text/plain" })
+              })
+            ]);
+          } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            if (!fallbackCopy()) throw new Error("fallback copy failed");
+          }
+          toast(`${label}已复制`);
+        } catch (error) {
+          if (fallbackCopy()) {
+            toast(`${label}已复制`);
+          } else {
+            toast("复制失败，请手动选择内容");
+          }
+        }
+      }
+
+      function toast(message) {
+        els.toast.textContent = message;
+        els.toast.classList.add("show");
+        window.clearTimeout(toast.timer);
+        toast.timer = window.setTimeout(() => els.toast.classList.remove("show"), 1800);
+      }
+
+      function downloadHtml() {
+        const documentHtml = `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>公众号排版导出</title><body>${state.html}</body></html>`;
+        const blob = new Blob([documentHtml], { type: "text/html;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "gongzhonghao-layout.html";
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toast("HTML 文件已导出");
+      }
+
+      function setSwitch(button, value) {
+        button.setAttribute("aria-checked", String(value));
+      }
+
+      function resetStyleSettings() {
+        Object.assign(state, defaultStyleState);
+        syncControlsFromState();
+        renderStyleFilters();
+        renderStyles();
+        renderComponentPickers();
+      }
+
+      els.draft.value = sampleDraft;
+      syncControlsFromState();
+      renderStyleFilters();
+      renderStyles();
+      renderComponentPickers();
+      update();
+
+      els.styleFilters.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-style-group]");
+        if (!button) return;
+        state.styleGroup = button.dataset.styleGroup;
+        renderStyleFilters();
+        renderStyles();
+      });
+
+      els.styleList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-style]");
+        if (!button) return;
+        state.style = button.dataset.style;
+        renderStyles();
+        renderComponentPickers();
+        update();
+      });
+
+      document.querySelector(".settings").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-component-picker]");
+        if (!button) return;
+        if (applyComponentToSelection(button.dataset.componentPicker, button.dataset.value)) {
+          renderComponentPickers();
+          return;
+        }
+        setComponentSelection(button.dataset.componentPicker, button.dataset.value);
+      });
+
+      els.draft.addEventListener("input", update);
+      els.font.addEventListener("change", update);
+      els.bodyFont.addEventListener("change", () => {
+        state.bodyFont = els.bodyFont.value;
+        update();
+      });
+      els.titleLayout.addEventListener("change", () => {
+        state.titleLayout = els.titleLayout.value;
+        update();
+      });
+      els.sectionStyle.addEventListener("change", () => {
+        state.sectionStyle = els.sectionStyle.value;
+        update();
+      });
+      els.titleSize.addEventListener("change", () => {
+        state.titleSize = Number(els.titleSize.value || 26);
+        update();
+      });
+      els.titleColor.addEventListener("input", () => {
+        state.titleColor = els.titleColor.value;
+        update();
+      });
+      els.resetTitleColor.addEventListener("click", () => {
+        state.titleColor = "";
+        update();
+        toast("标题颜色已跟随当前风格");
+      });
+      els.leadStyle.addEventListener("change", () => {
+        state.leadStyle = els.leadStyle.value;
+        update();
+      });
+      els.emphasisStyle.addEventListener("change", () => {
+        state.emphasisStyle = els.emphasisStyle.value;
+        update();
+      });
+      els.listStyle.addEventListener("change", () => {
+        state.listStyle = els.listStyle.value;
+        update();
+      });
+      els.dividerStyle.addEventListener("change", () => {
+        state.dividerStyle = els.dividerStyle.value;
+        update();
+      });
+      document.querySelector("#generateBtn").addEventListener("click", () => {
+        update();
+        toast("排版已更新");
+      });
+      document.querySelector("#clearBtn").addEventListener("click", () => {
+        els.draft.value = "";
+        update();
+        toast("草稿已清空");
+      });
+      document.querySelector("#clearStylesBtn").addEventListener("click", () => {
+        els.draft.value = clearDraftStyles(els.draft.value);
+        resetStyleSettings();
+        update();
+        toast("样式已清空，正文已保留");
+      });
+      document.querySelector("#sampleBtn").addEventListener("click", () => {
+        els.draft.value = sampleDraft;
+        update();
+        toast("已载入示例草稿");
+      });
+      document.querySelector("#copyHtmlBtn").addEventListener("click", () => copyValue(state.html, "HTML", "text/html"));
+      document.querySelector("#copyTextBtn").addEventListener("click", () => copyValue(state.text, "纯文本"));
+      document.querySelector("#copyMarkdownBtn").addEventListener("click", () => copyValue(state.markdown, "Markdown"));
+      document.querySelector("#downloadBtn").addEventListener("click", downloadHtml);
+      els.dividerToggle.addEventListener("click", () => {
+        state.showDividers = !state.showDividers;
+        setSwitch(els.dividerToggle, state.showDividers);
+        update();
+      });
+      els.copyrightToggle.addEventListener("click", () => {
+        state.showCopyright = !state.showCopyright;
+        setSwitch(els.copyrightToggle, state.showCopyright);
+        update();
+      });
+      document.querySelector(".view-switch").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-view]");
+        if (!button) return;
+        state.view = button.dataset.view;
+        document.querySelectorAll("[data-view]").forEach((item) => item.classList.toggle("is-active", item === button));
+        els.previewWrap.classList.toggle("desktop-preview", state.view === "desktop");
+      });
+    </script>
+  </body>
+</html>
