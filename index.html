@@ -165,7 +165,7 @@
 
       .workspace {
         display: grid;
-        grid-template-columns: minmax(320px, 28vw) minmax(420px, 34vw) minmax(360px, 1fr);
+        grid-template-columns: minmax(320px, 28vw) minmax(560px, 42vw) minmax(320px, 1fr);
         grid-template-areas: "draft settings preview";
         grid-template-rows: minmax(0, 1fr);
         height: calc(100vh - 68px);
@@ -746,17 +746,17 @@
 
       .visual-picker {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 7px;
       }
 
       .visual-card {
-        min-height: 106px;
+        min-height: 98px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
         background: #fff;
         color: var(--ink);
-        padding: 10px;
+        padding: 9px;
         display: grid;
         align-content: space-between;
         gap: 8px;
@@ -1000,6 +1000,10 @@
         .settings-style-shell {
           grid-column: 1 / -1;
         }
+
+        .visual-picker {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
       @media (max-width: 760px) {
@@ -1076,6 +1080,10 @@
         .settings,
         .preview-actions {
           display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .visual-picker {
           grid-template-columns: 1fr;
         }
 
