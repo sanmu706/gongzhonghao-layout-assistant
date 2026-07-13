@@ -406,7 +406,7 @@
         padding: 22px 28px 28px;
         display: flex;
         flex-direction: column;
-        overflow: auto;
+        overflow: hidden;
         overscroll-behavior: contain;
       }
 
@@ -447,16 +447,19 @@
       }
 
       .phone-wrap {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
+        min-height: 0;
         display: grid;
-        place-items: start center;
+        place-items: center;
         overflow: visible;
-        padding: 0 0 16px;
+        padding: 0;
       }
 
       .phone {
-        width: min(420px, 100%);
-        min-height: 760px;
+        --phone-height: min(760px, calc(100dvh - 220px));
+        width: min(420px, 100%, calc(var(--phone-height) * 0.5526));
+        height: var(--phone-height);
+        min-height: 0;
         border-radius: 42px;
         padding: 13px;
         background: linear-gradient(145deg, #eef1ed, #ffffff);
@@ -465,11 +468,15 @@
       }
 
       .phone-screen {
-        min-height: 734px;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         border-radius: 32px;
         overflow: hidden;
         background: #fff;
         border: 1px solid #e4e8e5;
+        overscroll-behavior: contain;
       }
 
       .phone-status {
@@ -531,7 +538,11 @@
       }
 
       .article {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
         padding: 18px 28px 44px;
+        overscroll-behavior: contain;
       }
 
       .article h2 {
@@ -2402,16 +2413,17 @@
 
       function scrollPreviewToAnchor(anchorText, occurrence = 0) {
         const target = findPreviewAnchorElement(anchorText, occurrence);
-        if (!target || !els.previewZone) return;
+        if (!target || !els.preview) return;
 
         const run = () => {
-          const zoneRect = els.previewZone.getBoundingClientRect();
+          const scroller = els.preview;
+          const zoneRect = scroller.getBoundingClientRect();
           const targetRect = target.getBoundingClientRect();
-          const top = Math.max(0, els.previewZone.scrollTop + targetRect.top - zoneRect.top - 28);
-          if (typeof els.previewZone.scrollTo === "function") {
-            els.previewZone.scrollTo({ top, behavior: "smooth" });
+          const top = Math.max(0, scroller.scrollTop + targetRect.top - zoneRect.top - 28);
+          if (typeof scroller.scrollTo === "function") {
+            scroller.scrollTo({ top, behavior: "smooth" });
           } else {
-            els.previewZone.scrollTop = top;
+            scroller.scrollTop = top;
           }
         };
         const schedule = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
